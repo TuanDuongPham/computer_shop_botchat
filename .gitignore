@@ -1,0 +1,6 @@
+.env
+__pycahche__
+*.py[cod]
+*.pyo
+*.pyd
+python-12
