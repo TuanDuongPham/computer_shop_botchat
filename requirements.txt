@@ -9,4 +9,4 @@ autogen-agentchat==0.4.9.3
 autogen-ext==0.4.9.3
 requests==2.32.3
 streamlit==1.44.1
-fastapi[standard]
+fastapi[standard]==0.115.12

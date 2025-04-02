@@ -34,20 +34,20 @@ def main():
     # print(enhanced_query, results)
 
     # Test Chroma DB Policy Query
-    query = "Phương thức thanh toán"
-    policy_search = PolicySearchService()
-    search_results = policy_search.search_policy(
-        query=query,
-        language='vi',
-        n_results=3
-    )
+    # query = "Phương thức thanh toán"
+    # policy_search = PolicySearchService()
+    # search_results = policy_search.search_policy(
+    #     query=query,
+    #     language='vi',
+    #     n_results=3
+    # )
 
-    policy_info = policy_search.format_policy_response(search_results)
-    print(policy_info)
+    # policy_info = policy_search.format_policy_response(search_results)
+    # print(policy_info)
 
     # Run chat app
-    # subprocess.Popen("start cmd /k fastapi dev app/server.py", shell=True)
-    # subprocess.Popen("start cmd /k streamlit run app/app.py", shell=True)e()
+    subprocess.Popen("start cmd /k fastapi dev app/server.py", shell=True)
+    subprocess.Popen("start cmd /k streamlit run app/app.py", shell=True)
 
 
 if __name__ == "__main__":
