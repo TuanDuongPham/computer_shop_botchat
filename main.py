@@ -1,7 +1,7 @@
 from database.chroma import ChromaDB
 from database.postgres import PostgresDB
 from generators.product_generator import ProductGenerator
-from vietnamese_llm_helper import VietnameseLLMHelper
+from services.vietnamese_llm_helper import VietnameseLLMHelper
 
 
 def main():
@@ -16,7 +16,7 @@ def main():
         generator.generate_products()
 
         # Test Chroma DB Query
-        query = "cpu intel giá trên 10 triệu"
+        query = "Ram 16GB dual channel"
         enhanced_query = vi_helper.enhance_vietnamese_query(query)
         results = chroma_db.search(
             enhanced_query, n_results=3, filter_dict=None)
