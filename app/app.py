@@ -6,7 +6,6 @@ API_URL = "http://127.0.0.1:8000/ask"
 st.title("🔧 Hardware Advisor Chatbot")
 st.write("Ask me anything about GPUs, RAM, PSUs, Storage, Coolers, and Motherboards!")
 
-# Chat input
 user_query = st.text_input("Your question:")
 
 if st.button("Ask"):

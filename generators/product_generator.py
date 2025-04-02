@@ -123,7 +123,6 @@ class ProductGenerator:
         return prompt
 
     def _extract_json_from_response(self, text):
-        """Extract JSON from response text, handling markdown code blocks"""
         text = text.strip()
         if text.startswith("```json"):
             text = text[7:-3].strip()
@@ -144,11 +143,8 @@ class ProductGenerator:
 
     def generate_products(self, products_per_category=100):
         self.postgres_db.insert_categories(PRODUCT_CATEGORIES)
-
-        # Get category IDs
         category_ids = self.postgres_db.get_category_ids(PRODUCT_CATEGORIES)
 
-        # Generate products for each category
         for category in PRODUCT_CATEGORIES:
             if category in ["PSU", "Case", "Cooling"]:
                 products_per_category = 50
@@ -163,20 +159,16 @@ class ProductGenerator:
                 print(f"  Processing batch {batch_number} for {category}...")
 
                 try:
-                    # Get prompt and generate products
                     prompt = self._get_prompt_for_category(
                         category, batch_number)
 
-                    # Call OpenAI API
                     response = self.client.chat.completions.create(
                         model=OPENAI_MODEL,
                         messages=[{"role": "user", "content": prompt}],
-                        # Increase temperature with each batch
                         temperature=0.8 + (batch_number * 0.02),
                         max_tokens=3000,
                     )
 
-                    # Parse response
                     products_json = response.choices[0].message.content
                     products_json = self._extract_json_from_response(
                         products_json)
@@ -184,9 +176,7 @@ class ProductGenerator:
                     try:
                         products = json.loads(products_json)
 
-                        # Process products
                         for product in products:
-                            # Create a unique identifier
                             product_identifier = f"{product['brand']}_{product['model']}"
 
                             # Skip if duplicate
@@ -223,11 +213,10 @@ class ProductGenerator:
                 except Exception as e:
                     print(
                         f"  Error generating products for {category}, batch {batch_number}: {e}")
-                    time.sleep(2)  # Add a small delay before retrying
+                    time.sleep(2)
 
                 batch_number += 1
 
-                # Break if we've tried too many batches
                 if batch_number > MAX_BATCH_ATTEMPTS:
                     print(
                         f"  Reached maximum batch attempts for {category}. Generated {products_created} products.")

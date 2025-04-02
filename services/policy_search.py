@@ -5,12 +5,7 @@ from typing import Dict, List, Any, Optional
 
 
 class PolicySearchService:
-    """
-    Service for searching and retrieving policy information from the vector database.
-    """
-
     def __init__(self):
-        """Initialize the policy search service."""
         self.chroma_db = ChromaDB().connect(collection_name="policies")
         self.vi_helper = VietnameseLLMHelper()
         self.reranker = RerankerService()
@@ -18,20 +13,8 @@ class PolicySearchService:
     def search_policy(self,
                       query: str,
                       language: str = "vi",
-                      n_results: int = 3,
+                      n_results: int = 2,
                       filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """
-        Search for policy information based on the query.
-
-        Args:
-            query: The search query
-            language: Query language ("vi" for Vietnamese, "en" for English)
-            n_results: Number of results to return
-            filter_dict: Optional filter to apply to the search
-
-        Returns:
-            Dictionary with search results and metadata
-        """
         try:
             # Set type filter to only search policy content
             policy_filter = {"type": "policy"}
@@ -50,11 +33,10 @@ class PolicySearchService:
             # Perform initial search
             initial_results = self.chroma_db.search(
                 enhanced_query,
-                n_results=n_results * 2,  # Get more for reranking
+                n_results=n_results * 2,
                 filter_dict=filter_dict
             )
 
-            # Rerank results for better relevance
             reranked_results = self.reranker.rerank(
                 enhanced_query,
                 initial_results,
@@ -69,7 +51,6 @@ class PolicySearchService:
 
         except Exception as e:
             print(f"Policy search error: {e}")
-            # Fallback to basic search
             return {
                 "results": self.chroma_db.search(query, n_results=n_results, filter_dict=filter_dict),
                 "original_query": query,
@@ -78,15 +59,6 @@ class PolicySearchService:
             }
 
     def format_policy_response(self, search_results: Dict[str, Any]) -> str:
-        """
-        Format policy search results into a user-friendly response.
-
-        Args:
-            search_results: Results from search_policy method
-
-        Returns:
-            Formatted response string
-        """
         if not search_results.get("results") or not search_results["results"].get("documents"):
             return "Xin lỗi, tôi không tìm thấy thông tin chính sách liên quan đến câu hỏi của bạn."
 
@@ -103,27 +75,57 @@ class PolicySearchService:
         # Add section information
         if "title" in top_metadata:
             response += f"### {top_metadata['title']}\n\n"
+            try:
+                # Get the section path to identify the full section
+                section_path = top_metadata.get('path', '')
+                section_title = top_metadata.get('title', '')
 
-        # Clean up the document text
+                if section_title:
+                    section_filter = {"title": section_title}
+
+                    section_results = self.chroma_db.collection.query(
+                        query_texts=["relevant content"],
+                        n_results=10,
+                        where=section_filter
+                    )
+
+                    if section_results and len(section_results['documents'][0]) > 0:
+                        all_texts = []
+
+                        for chunk_text in section_results['documents'][0]:
+                            cleaned_text = chunk_text
+                            cleaned_text = cleaned_text.replace("POLICY: ", "")
+                            cleaned_text = cleaned_text.replace("PATH: ", "")
+
+                            if "RELATED TERMS:" in cleaned_text:
+                                cleaned_text = cleaned_text.split(
+                                    "RELATED TERMS:")[0]
+                            if "COMMON QUESTIONS:" in cleaned_text:
+                                cleaned_text = cleaned_text.split(
+                                    "COMMON QUESTIONS:")[0]
+
+                            all_texts.append(cleaned_text.strip())
+
+                        # Combine section chunks
+                        policy_text = "\n\n".join(all_texts)
+                        return response + policy_text
+            except Exception as e:
+                print(f"Error retrieving full section: {e}")
+
         policy_text = top_document
 
-        # Remove technical tags
         policy_text = policy_text.replace("POLICY: ", "")
         policy_text = policy_text.replace("PATH: ", "")
 
-        # Remove the RELATED TERMS section
         if "RELATED TERMS:" in policy_text:
             policy_text = policy_text.split("RELATED TERMS:")[0]
 
-        # Remove the COMMON QUESTIONS section
         if "COMMON QUESTIONS:" in policy_text:
             policy_text = policy_text.split("COMMON QUESTIONS:")[0]
 
-        # Add the cleaned policy text
         response += policy_text.strip()
 
         return response
 
     def close(self):
-        """Close the database connections."""
         self.chroma_db.close()

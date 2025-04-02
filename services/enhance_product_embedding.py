@@ -1,17 +1,4 @@
 def generate_enhanced_product_document(product, category, detailed_specs):
-    """
-    Generate a rich, detailed document for a product with expanded synonyms
-    and structured information to improve embedding quality.
-
-    Args:
-        product: The product dictionary
-        category: The product category
-        detailed_specs: Detailed specifications as text
-
-    Returns:
-        A well-structured document string for embedding
-    """
-    # Category-specific synonyms and terminology to include
     category_synonyms = {
         "CPU": ["processor", "central processing unit", "microprocessor", "chip"],
         "Motherboard": ["mainboard", "system board", "logic board", "mobo"],
@@ -23,7 +10,6 @@ def generate_enhanced_product_document(product, category, detailed_specs):
         "Cooling": ["thermal solution", "heatsink", "fan", "temperature management"]
     }
 
-    # Add alternative terms for this category
     synonyms = category_synonyms.get(category, [])
     category_terms = f"{category} " + " ".join(synonyms)
 
@@ -31,7 +17,6 @@ def generate_enhanced_product_document(product, category, detailed_specs):
     price = product["price"]
     price_text = f"${price} {price} USD {price} dollars price:{price}"
 
-    # Build a rich document with structured sections for better semantic search
     document = f"""
         PRODUCT: {product['name']} {product['brand']} {product['model']}
         CATEGORY: {category_terms}

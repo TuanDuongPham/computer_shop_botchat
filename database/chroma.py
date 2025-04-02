@@ -34,8 +34,6 @@ class ChromaDB:
         return self
 
     def _create_chunks(self, text, metadata, product_id):
-        """Create overlapping chunks from a text document."""
-        # Split text into sentences for more natural chunks
         sentences = re.split(r'(?<=[.!?])\s+', text)
         chunks = []
         chunk_ids = []
@@ -86,11 +84,9 @@ class ChromaDB:
         return chunks, chunk_ids, chunk_metadatas
 
     def add_product(self, product_id, product, category, specs_text):
-        # Generate rich product description with enhanced semantic content
         product_text = generate_enhanced_product_document(
             product, category, specs_text)
 
-        # Create metadata
         metadata = {
             "category": category,
             "price": product["price"],
@@ -111,7 +107,6 @@ class ChromaDB:
                 documents=chunks
             )
 
-            # Also add the full product as a single document for direct product retrieval
             self.collection.add(
                 ids=[str(product_id)],
                 metadatas=[metadata],
@@ -119,11 +114,9 @@ class ChromaDB:
             )
 
     def search(self, query, n_results=3, filter_dict=None):
-        """Search for products using a two-stage retrieval approach"""
-        # First stage: Retrieve relevant chunks
         chunk_results = self.collection.query(
             query_texts=[query],
-            n_results=n_results * 3,  # Retrieve more chunks for reranking
+            n_results=n_results * 3,
             where=filter_dict
         )
 
@@ -133,11 +126,10 @@ class ChromaDB:
             if 'product_id' in metadata:
                 product_ids.add(metadata['product_id'])
 
-        # Second stage: Retrieve full products for these IDs
+        # Retrieve full products for these IDs
         if product_ids:
             where_filter = {"product_id": {"$in": list(product_ids)}}
             if filter_dict:
-                # Combine with original filters
                 where_filter = {"$and": [where_filter, filter_dict]}
 
             product_results = self.collection.query(
@@ -147,7 +139,6 @@ class ChromaDB:
             )
             return product_results
 
-        # Fallback to original search if no chunks were found
         return chunk_results
 
     def close(self):
