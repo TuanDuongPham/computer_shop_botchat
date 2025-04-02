@@ -10,6 +10,7 @@ class ChromaDB:
     def __init__(self):
         self.client = None
         self.collection = None
+        self.collection_policy = None
         self.chunk_size = 512
         self.chunk_overlap = 128
 

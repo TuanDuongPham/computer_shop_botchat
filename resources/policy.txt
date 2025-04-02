@@ -1,0 +1,286 @@
+# Chính sách Cửa hàng TechPlus
+
+## 1. Thông tin chung về cửa hàng
+
+### 1.1. Giới thiệu
+- **Tên cửa hàng:** TechPlus
+- **Slogan:** "Công nghệ tối ưu - Dịch vụ tận tâm"
+- **Địa chỉ:** 123 Đường Công Nghệ, Quận Trung Tâm, TP. Hồ Chí Minh
+- **Hotline:** 1900-TECHPLUS (1900-8324-7587)
+- **Email:** cskh@techplus.vn
+- **Website:** www.techplus.vn
+- **Giờ mở cửa:** 08:00 - 21:00 (Thứ 2 - Chủ nhật)
+
+### 1.2. Dịch vụ cung cấp
+- Bán máy tính nguyên bộ (desktop, laptop, máy tính bảng)
+- Bán linh kiện máy tính (CPU, mainboard, RAM, VGA, PSU, ổ cứng, vỏ case...)
+- Lắp ráp máy tính theo yêu cầu
+- Sửa chữa, bảo dưỡng máy tính
+- Nâng cấp phần cứng máy tính
+- Cài đặt phần mềm và hệ điều hành
+- Tư vấn giải pháp công nghệ cho cá nhân và doanh nghiệp
+
+## 2. Chính sách bán hàng
+
+### 2.1. Đặt hàng và thanh toán
+- **Phương thức đặt hàng:**
+  - Trực tiếp tại cửa hàng
+  - Qua website: www.techplus.vn
+  - Qua hotline: 1900-TECHPLUS
+  - Qua ứng dụng TechPlus trên iOS/Android
+  
+- **Phương thức thanh toán:**
+  - Tiền mặt
+  - Thẻ ATM nội địa
+  - Thẻ tín dụng/ghi nợ quốc tế (Visa, Mastercard, JCB)
+  - Chuyển khoản ngân hàng
+  - Ví điện tử (MoMo, ZaloPay, VNPay)
+  - Trả góp (xem chi tiết tại mục 11)
+
+- **Xác nhận đơn hàng:**
+  - Đơn hàng online sẽ được xác nhận qua email hoặc SMS trong vòng 30 phút sau khi đặt hàng
+  - Nhân viên sẽ gọi điện xác nhận lại thông tin trước khi giao hàng
+
+### 2.2. Chính sách giá
+- Cam kết giá niêm yết là giá cuối cùng (đã bao gồm VAT)
+- Chương trình "Price Match": Đảm bảo giá tốt nhất - nếu khách hàng tìm thấy sản phẩm giống hệt với giá thấp hơn tại các đại lý chính hãng khác, TechPlus sẽ điều chỉnh giá tương đương
+- Chính sách giá đặc biệt cho đơn hàng số lượng lớn (từ 5 sản phẩm trở lên)
+
+### 2.3. Chính sách giao hàng
+- **Phí giao hàng:**
+  - Miễn phí giao hàng trong nội thành với đơn hàng từ 1 triệu đồng
+  - Đồng giá 30.000đ cho đơn hàng dưới 1 triệu đồng trong nội thành
+  - Phí giao hàng ngoại thành và tỉnh thành khác được tính theo khoảng cách và trọng lượng
+  
+- **Thời gian giao hàng:**
+  - Nội thành: 2-24 giờ (tùy sản phẩm)
+  - Ngoại thành: 24-48 giờ
+  - Tỉnh thành khác: 2-5 ngày làm việc
+  
+- **Kiểm tra hàng:**
+  - Khách hàng được kiểm tra hàng trước khi nhận
+  - Nếu phát hiện lỗi hoặc không đúng sản phẩm, có thể từ chối nhận hàng
+
+## 3. Chính sách bảo hành
+
+### 3.1. Điều kiện bảo hành
+- Sản phẩm còn trong thời hạn bảo hành (theo tem bảo hành hoặc hóa đơn mua hàng)
+- Tem bảo hành, mã serial number còn nguyên vẹn
+- Sản phẩm không có dấu hiệu va đập, móp méo, cháy nổ, vào nước hoặc các tác động ngoại lực khác
+- Không áp dụng bảo hành cho các lỗi phần mềm, virus, hoặc do người dùng cài đặt phần mềm không tương thích
+
+### 3.2. Thời hạn bảo hành
+- **Máy tính nguyên bộ:**
+  - Laptop: 12-36 tháng (tùy thương hiệu và dòng sản phẩm)
+  - Desktop do TechPlus lắp ráp: 36 tháng
+  - Desktop nguyên bộ: Theo chính sách của hãng (12-36 tháng)
+  
+- **Linh kiện:**
+  - CPU: 36 tháng
+  - Mainboard: 36 tháng
+  - RAM: 36 tháng đến trọn đời (tùy thương hiệu)
+  - VGA: 36 tháng
+  - PSU: 60-120 tháng (tùy thương hiệu)
+  - Ổ cứng SSD: 36-60 tháng
+  - Ổ cứng HDD: 24 tháng
+  - Vỏ case: 12 tháng
+  - Tản nhiệt: 12-24 tháng
+  - Phụ kiện khác: 6-12 tháng
+
+### 3.3. Phương thức bảo hành
+- **Bảo hành tại cửa hàng:**
+  - Khách hàng mang sản phẩm đến trực tiếp cửa hàng
+  - Thời gian xử lý: 3-7 ngày làm việc (tùy tình trạng)
+  
+- **Bảo hành tại nơi sử dụng:**
+  - Áp dụng cho khách hàng doanh nghiệp hoặc sản phẩm có trọng lượng lớn
+  - Phí dịch vụ: Miễn phí trong bán kính 10km, tính phí ngoài khoảng cách này
+  
+- **Bảo hành hãng:**
+  - Đối với sản phẩm cần gửi bảo hành hãng, thời gian xử lý từ 7-30 ngày
+  - TechPlus hỗ trợ toàn bộ quy trình gửi và nhận bảo hành
+
+### 3.4. Chính sách đặc biệt
+- **Bảo hành 1 đổi 1:**
+  - Trong 30 ngày đầu tiên nếu sản phẩm gặp lỗi do nhà sản xuất
+  - Áp dụng cho laptop, CPU, mainboard, VGA cao cấp
+  
+- **Bảo hành Express:**
+  - Dịch vụ xử lý bảo hành nhanh trong 24h (có thu phí)
+  - Áp dụng cho khách hàng doanh nghiệp hoặc khách VIP
+
+## 4. Chính sách đổi trả và hoàn tiền
+
+### 4.1. Điều kiện đổi trả
+- Sản phẩm còn nguyên vẹn, đầy đủ phụ kiện, tem nhãn, bao bì
+- Có hóa đơn mua hàng hoặc phiếu xuất kho từ TechPlus
+- Sản phẩm không có dấu hiệu đã qua sử dụng (trừ lỗi kỹ thuật)
+
+### 4.2. Thời hạn đổi trả
+- **Đổi sản phẩm:** Trong vòng 7 ngày kể từ ngày mua
+- **Trả sản phẩm và hoàn tiền:** Trong vòng 3 ngày kể từ ngày mua
+- **Lỗi kỹ thuật:** Trong vòng 15 ngày kể từ ngày mua, khách hàng có thể yêu cầu đổi mới
+
+### 4.3. Phương thức hoàn tiền
+- **Tiền mặt:** Hoàn trả trực tiếp tại cửa hàng
+- **Chuyển khoản:** Hoàn trả qua tài khoản ngân hàng trong vòng 3-5 ngày làm việc
+- **Hoàn tiền thẻ tín dụng:** Thời gian xử lý từ 7-15 ngày làm việc (tùy ngân hàng)
+
+### 4.4. Trường hợp đặc biệt
+- Sản phẩm đặt theo yêu cầu đặc biệt sẽ không được áp dụng chính sách đổi trả (trừ trường hợp lỗi kỹ thuật)
+- Phần mềm, license key đã kích hoạt không được đổi trả
+- Chương trình "Mua An Tâm": Với phí 5% giá trị sản phẩm, khách hàng được đổi trả không cần lý do trong vòng 30 ngày
+
+## 5. Chính sách bảo mật thông tin
+
+### 5.1. Thu thập thông tin
+- Chỉ thu thập thông tin cần thiết: tên, địa chỉ, số điện thoại, email
+- Mục đích: Xử lý đơn hàng, bảo hành, chăm sóc khách hàng
+- Khách hàng có quyền từ chối cung cấp thông tin không bắt buộc
+
+### 5.2. Bảo vệ thông tin
+- Thông tin khách hàng được mã hóa và lưu trữ an toàn
+- Không chia sẻ thông tin với bên thứ ba khi chưa được sự đồng ý
+- Nhân viên được đào tạo về quy trình bảo mật thông tin
+
+### 5.3. Quyền của khách hàng
+- Yêu cầu truy cập vào thông tin cá nhân
+- Yêu cầu cập nhật hoặc sửa đổi thông tin
+- Yêu cầu xóa thông tin khỏi hệ thống (trong phạm vi pháp luật cho phép)
+
+## 6. Chương trình khách hàng thân thiết
+
+### 6.1. Thành viên TechPlus
+- **Đăng ký:** Miễn phí, chỉ cần cung cấp thông tin cơ bản
+- **Quyền lợi:**
+  - Tích điểm 1% giá trị đơn hàng
+  - Ưu đãi sinh nhật
+  - Thông báo khuyến mãi sớm
+  
+### 6.2. Thành viên VIP
+- **Điều kiện:** Tổng giá trị mua hàng từ 50 triệu đồng/năm
+- **Quyền lợi:**
+  - Tích điểm 2% giá trị đơn hàng
+  - Bảo hành ưu tiên
+  - Hỗ trợ kỹ thuật 24/7
+  - Miễn phí vệ sinh, bảo dưỡng máy 2 lần/năm
+  
+### 6.3. Thành viên Doanh nghiệp
+- **Đăng ký:** Cung cấp giấy phép kinh doanh
+- **Quyền lợi:**
+  - Giá ưu đãi cho đơn hàng số lượng lớn
+  - Thanh toán linh hoạt
+  - Có nhân viên kỹ thuật chuyên biệt hỗ trợ
+
+## 7. Chính sách dịch vụ kỹ thuật
+
+### 7.1. Dịch vụ sửa chữa
+- **Báo giá:** Miễn phí kiểm tra và báo giá
+- **Phí dịch vụ:**
+  - Sửa chữa nhỏ: 100.000đ - 300.000đ
+  - Sửa chữa lớn: Theo báo giá cụ thể
+- **Thời gian xử lý:**
+  - Lỗi nhỏ: 1-3 giờ
+  - Lỗi phức tạp: 1-3 ngày
+
+### 7.2. Dịch vụ cài đặt
+- **Cài hệ điều hành:** 150.000đ (bao gồm driver)
+- **Cài phần mềm cơ bản:** 50.000đ/máy
+- **Gói phần mềm đầy đủ:** 200.000đ/máy
+
+### 7.3. Dịch vụ bảo trì
+- **Vệ sinh máy tính:** 150.000đ - 300.000đ (tùy loại máy)
+- **Thay keo tản nhiệt:** 100.000đ - 200.000đ
+- **Gói bảo trì định kỳ:** 500.000đ/năm (2 lần/năm)
+
+### 7.4. Dịch vụ cứu dữ liệu
+- **Mức độ cơ bản:** 300.000đ - 500.000đ
+- **Mức độ phức tạp:** 500.000đ - 2.000.000đ
+- **Cam kết bảo mật:** 100% thông tin khách hàng được bảo mật
+
+## 8. Hỗ trợ và khiếu nại
+
+### 8.1. Kênh hỗ trợ
+- **Hotline:** 1900-TECHPLUS (24/7)
+- **Email:** support@techplus.vn
+- **Live Chat:** Trên website và ứng dụng (8:00 - 22:00)
+- **Fanpage:** facebook.com/techplus.official
+
+### 8.2. Quy trình khiếu nại
+- **Tiếp nhận:** Trong vòng 24 giờ kể từ khi nhận được khiếu nại
+- **Phản hồi:** Trong vòng 48 giờ với phương án giải quyết
+- **Giải quyết:** Tối đa 7 ngày làm việc
+- **Khiếu nại đặc biệt:** Sẽ được Giám đốc dịch vụ khách hàng trực tiếp xử lý
+
+### 8.3. Cam kết hài lòng
+- Nếu khách hàng không hài lòng với phương án giải quyết, TechPlus sẽ đề xuất phương án thay thế
+- Bồi thường theo quy định của pháp luật nếu lỗi thuộc về cửa hàng
+
+## 9. Chính sách thảm đỏ cho khách hàng mới
+
+- **Ưu đãi chào mừng:** Giảm 5% cho đơn hàng đầu tiên
+- **Tư vấn miễn phí:** 1 giờ tư vấn 1-1 với chuyên viên kỹ thuật
+- **Cài đặt miễn phí:** Cho sản phẩm mua tại cửa hàng
+- **Bảo hành ưu đãi:** Thêm 3 tháng bảo hành cho khách hàng mới
+
+## 10. Chính sách môi trường
+
+- **Thu hồi sản phẩm cũ:** Giảm giá khi mua sản phẩm mới
+- **Tái chế:** Xử lý linh kiện điện tử đúng cách, bảo vệ môi trường
+- **Sử dụng bao bì tái chế:** Giảm thiểu rác thải nhựa
+- **Tiết kiệm năng lượng:** Khuyến khích sản phẩm tiết kiệm điện
+
+## 11. Chính sách trả góp
+
+### 11.1. Đối tác trả góp
+- **Công ty tài chính:**
+  - Home Credit
+  - FE Credit
+  - HD Saison
+  - Mcredit
+  - Shinhan Finance
+- **Ngân hàng:**
+  - Sacombank
+  - BIDV
+  - VPBank
+  - TPBank
+  - Techcombank
+- **Thẻ tín dụng:** Chia nhỏ thanh toán qua các thẻ tín dụng của 25 ngân hàng liên kết
+
+### 11.2. Điều kiện trả góp
+- **Giá trị tối thiểu:** Từ 3.000.000đ
+- **Yêu cầu hồ sơ:**
+  - Cơ bản: CMND/CCCD, Hộ khẩu/KT3, tuổi từ 20-60
+  - Linh hoạt: Chỉ cần CMND/CCCD (với khoản vay dưới 10 triệu tại một số đối tác)
+  - Dành cho sinh viên: Thẻ sinh viên + CMND/CCCD (áp dụng cho sinh viên từ năm 3 trở lên)
+- **Hình thức xét duyệt:**
+  - Tại cửa hàng: Xét duyệt trong 15-30 phút
+  - Online: Xét duyệt trong 2-24 giờ
+
+### 11.3. Gói trả góp 0% lãi suất
+- **Thời hạn:** 6/9/12 tháng tùy đối tác và giá trị sản phẩm
+- **Phí hồ sơ:** 1-3% giá trị sản phẩm (tùy đối tác)
+- **Điều kiện:** Áp dụng cho sản phẩm không trong chương trình khuyến mãi giảm giá
+- **Đặc quyền VIP:** Miễn phí hồ sơ cho khách hàng VIP (áp dụng cho gói 6 tháng)
+
+### 11.4. Gói trả góp lãi suất thông thường
+- **Thời hạn:** 6/9/12/18/24/36 tháng
+- **Lãi suất:** Từ 1.17% - 2.5%/tháng (tùy đối tác và thời hạn)
+- **Trả trước tối thiểu:** 10% - 40% giá trị sản phẩm (tùy gói)
+- **Thanh toán sớm:** Được phép thanh toán sớm sau 3 tháng, phí từ 0% - 5% số tiền còn lại
+
+### 11.5. Quy trình trả góp
+1. **Tư vấn sản phẩm**: Lựa chọn sản phẩm phù hợp với nhu cầu
+2. **Chọn gói trả góp**: Tư vấn viên sẽ giới thiệu các gói trả góp phù hợp
+3. **Nộp hồ sơ**: Cung cấp giấy tờ theo yêu cầu
+4. **Xét duyệt**: Đối tác tài chính sẽ xét duyệt khoản vay
+5. **Thanh toán trả trước**: Đóng khoản trả trước và phí hồ sơ (nếu có)
+6. **Nhận sản phẩm**: Khách hàng nhận sản phẩm và giấy hẹn trả góp
+7. **Thanh toán định kỳ**: Thực hiện thanh toán theo lịch hẹn
+
+### 11.6. Công cụ tính toán trả góp
+TechPlus cung cấp công cụ tính toán trả góp trên website và chatbot để khách hàng có thể:
+- Tính số tiền trả góp hàng tháng
+- So sánh các gói trả góp khác nhau
+- Xem tổng chi phí khi mua trả góp
+- Tính toán khoản tiền trả trước tối ưu
