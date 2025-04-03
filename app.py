@@ -10,6 +10,7 @@ import asyncio
 import threading
 import os
 import sys
+import re
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(os.path.dirname(current_dir))
@@ -38,6 +39,14 @@ if "agents" not in st.session_state:
 if "default_agent" not in st.session_state:
     st.session_state.default_agent = None
 
+if "order_form_data" not in st.session_state:
+    st.session_state.order_form_data = None
+
+if "pending_order_products" not in st.session_state:
+    st.session_state.pending_order_products = None
+
+if "order_confirmation" not in st.session_state:
+    st.session_state.order_confirmation = None
 
 st.set_page_config(
     page_title="TechPlus Hardware Advisor",
@@ -98,16 +107,32 @@ async def process_query(query, language="vi"):
 
         response = await agent_instance.handle_query(query, language)
 
-        agent_response = {
-            "content": response,
-            "sender": agent_instance.agent.name
-        }
+        if isinstance(response, dict) and "show_order_form" in response:
+            st.session_state.pending_order_products = response.get(
+                "products", [])
 
-        return {
-            "role": "assistant",
-            "content": response,
-            "agent_responses": [agent_response]
-        }
+            agent_response = {
+                "content": response["content"],
+                "sender": agent_instance.agent.name
+            }
+
+            return {
+                "role": "assistant",
+                "content": response["content"],
+                "agent_responses": [agent_response],
+                "show_order_form": True
+            }
+        else:
+            agent_response = {
+                "content": response,
+                "sender": agent_instance.agent.name
+            }
+
+            return {
+                "role": "assistant",
+                "content": response,
+                "agent_responses": [agent_response]
+            }
 
     except Exception as e:
         return {
@@ -138,6 +163,53 @@ def run_async_query(query):
         st.session_state.processing = False
 
 
+def render_order_form():
+    last_message = st.session_state.messages[-1] if st.session_state.messages else None
+
+    if last_message and last_message.get("show_order_form", False):
+        with st.expander("📝 Thông tin đặt hàng", expanded=True):
+            with st.form("order_form"):
+                st.write("Vui lòng điền thông tin để hoàn tất đơn hàng:")
+                customer_name = st.text_input("Họ và tên")
+                customer_phone = st.text_input("Số điện thoại")
+                customer_address = st.text_area("Địa chỉ giao hàng")
+
+                submit_button = st.form_submit_button("Xác nhận đặt hàng")
+
+                if submit_button:
+                    if not customer_name or not customer_phone or not customer_address:
+                        st.error("Vui lòng điền đầy đủ thông tin")
+                    else:
+                        st.session_state.order_form_data = {
+                            "customer_name": customer_name,
+                            "customer_phone": customer_phone,
+                            "customer_address": customer_address
+                        }
+
+                        if st.session_state.pending_order_products:
+                            order_processor = st.session_state.agents.get(
+                                "order_processor")
+                            if order_processor:
+                                order_result = order_processor.create_order_from_form(
+                                    st.session_state.order_form_data,
+                                    st.session_state.pending_order_products
+                                )
+
+                                st.session_state.order_confirmation = order_result["confirmation"]
+
+                                st.session_state.messages.append({
+                                    "role": "assistant",
+                                    "content": order_result["confirmation"],
+                                    "agent_responses": [{
+                                        "content": order_result["confirmation"],
+                                        "sender": "OrderProcessor"
+                                    }]
+                                })
+
+                                st.session_state.pending_order_products = None
+                                st.rerun()
+
+
 initialize_agents()
 
 for message in st.session_state.messages:
@@ -159,6 +231,8 @@ for message in st.session_state.messages:
         else:
             with st.chat_message("assistant", avatar="🤖"):
                 st.write(message["content"])
+
+render_order_form()
 
 # Chat input
 if st.session_state.processing:

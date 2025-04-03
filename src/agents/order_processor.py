@@ -198,3 +198,121 @@ class OrderProcessorAgent:
         self.orders[order_id] = order
 
         return order
+
+    async def process_order_with_info(self, customer_info, product_info):
+        try:
+            # Tạo đơn hàng trong hệ thống
+            products = [{"name": product_info["name"],
+                         "quantity": product_info.get("quantity", 1)}]
+            order = self.create_order(customer_info, products)
+
+            # Chuẩn bị thông tin thanh toán
+            payment_options = "\n".join(
+                [f"- {method}" for method in self.payment_methods])
+
+            # Định dạng thông tin sản phẩm
+            product_details = ""
+            total_price = 0
+
+            for product in order["products"]:
+                price = self.format_price(product["price"])
+                product_details += f"- {product['name']} x{product['quantity']}: {price}\n"
+                total_price += product["price"] * product["quantity"]
+
+            # Tạo phản hồi xác nhận đơn hàng
+            confirmation = f"""
+                Xác nhận đơn hàng #{order['order_id']}
+
+                Thông tin khách hàng:
+                - Tên: {customer_info['name']}
+                - Số điện thoại: {customer_info['phone']}
+                - Địa chỉ giao hàng: {customer_info['address']}
+
+                Sản phẩm:
+                {product_details}
+                Tổng tiền: {self.format_price(total_price)}
+
+                Thời gian giao hàng dự kiến: {order['delivery_date']} ({order['delivery_time']})
+
+                Phương thức thanh toán:
+                {payment_options}
+
+                Cảm ơn bạn đã mua sắm tại TechPlus! Chúng tôi sẽ liên hệ với bạn để xác nhận đơn hàng trong thời gian sớm nhất.
+                """
+            return confirmation
+
+        except Exception as e:
+            print(f"Error processing order: {e}")
+            return f"Xin lỗi, đã xảy ra lỗi khi xử lý đơn hàng. Vui lòng thử lại hoặc liên hệ với chúng tôi qua số hotline 1900-TECHPLUS."
+
+    async def handle_query(self, query: str, language: str = "vi"):
+        try:
+            products = self._extract_product_info(query)
+
+            if not products:
+                return "Bạn muốn đặt sản phẩm gì? Vui lòng cung cấp thêm thông tin về sản phẩm bạn muốn mua."
+
+            if products:
+                product_info = ""
+                for product in products:
+                    quantity = product.get("quantity", 1)
+                    product_info += f"- {product['name']} x{quantity}\n"
+
+                response_with_signal = {
+                    "content": f"Bạn đã chọn sản phẩm:\n{product_info}\nVui lòng cung cấp thông tin cá nhân để hoàn tất đơn hàng.",
+                    "show_order_form": True,
+                    "products": products
+                }
+
+                return response_with_signal
+            else:
+                return "Xin lỗi, tôi không thể xác định sản phẩm bạn muốn đặt. Vui lòng nêu rõ tên sản phẩm và số lượng bạn muốn mua."
+
+        except Exception as e:
+            print(f"Error in OrderProcessorAgent.handle_query: {e}")
+            return f"Xin lỗi, tôi đang gặp sự cố khi xử lý đơn đặt hàng. Vui lòng thử lại sau hoặc liên hệ trực tiếp với cửa hàng qua hotline 1900-TECHPLUS."
+
+    def create_order_from_form(self, form_data, products):
+        customer_info = {
+            "name": form_data.get("customer_name", ""),
+            "phone": form_data.get("customer_phone", ""),
+            "address": form_data.get("customer_address", "")
+        }
+
+        order = self.create_order(customer_info, products)
+
+        product_details = ""
+        total_price = 0
+
+        for product in order["products"]:
+            price = self.format_price(product["price"])
+            product_details += f"- {product['name']} x{product['quantity']}: {price}\n"
+            total_price += product["price"] * product["quantity"]
+
+        order_confirmation = f"""
+            Đơn hàng #{order['order_id']} đã được tạo thành công!
+
+            Thông tin khách hàng:
+            - Tên: {customer_info['name']}
+            - SĐT: {customer_info['phone']}
+            - Địa chỉ: {customer_info['address']}
+
+            Sản phẩm:
+            {product_details}
+            Tổng tiền: {self.format_price(total_price)}
+
+            Thời gian giao hàng dự kiến: {order['delivery_date']} ({order['delivery_time']})
+
+            Phương thức thanh toán:
+            - Thanh toán khi nhận hàng (COD)
+            - Chuyển khoản ngân hàng
+            - Thanh toán qua ví điện tử
+
+            Cảm ơn bạn đã mua sắm tại TechPlus!
+                """
+
+        return {
+            "order_id": order['order_id'],
+            "confirmation": order_confirmation,
+            "total_price": total_price
+        }
