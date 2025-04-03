@@ -4,7 +4,6 @@ import uuid
 import time
 
 API_URL = "http://127.0.0.1:8000"
-POLLING_INTERVAL = 2
 
 st.set_page_config(
     page_title="TechPlus Hardware Advisor",
@@ -22,8 +21,8 @@ if "messages" not in st.session_state:
 if "waiting_for_response" not in st.session_state:
     st.session_state.waiting_for_response = False
 
-if "last_query_time" not in st.session_state:
-    st.session_state.last_query_time = 0
+if "last_poll_time" not in st.session_state:
+    st.session_state.last_poll_time = 0
 
 # Define agent emoji icons
 agent_icons = {
@@ -51,31 +50,35 @@ st.markdown("Chào mừng bạn đến với hệ thống tư vấn của TechPl
 
 
 def poll_for_response():
+    """Kiểm tra phản hồi mới từ server và trả về True nếu có phản hồi mới"""
     try:
+        current_time = time.time()
+        # Chỉ poll mỗi 1 giây để tránh quá tải
+        if current_time - st.session_state.last_poll_time < 1:
+            return False
+
+        st.session_state.last_poll_time = current_time
+
         response = requests.get(
-            f"{API_URL}/poll/{st.session_state.session_id}")
+            f"{API_URL}/poll/{st.session_state.session_id}",
+            timeout=2
+        )
 
         if response.status_code == 200:
             data = response.json()
-
             if data.get("has_response", False):
                 assistant_message = data.get("assistant_message", {})
-
-                # Check if this is a new message we haven't seen before
                 if assistant_message and assistant_message.get("content"):
-                    current_messages = [m.get(
-                        "content", "") for m in st.session_state.messages if m.get("role") == "assistant"]
-
-                    if assistant_message.get("content") not in current_messages:
+                    # Kiểm tra xem message này đã có trong danh sách chưa
+                    current_contents = [msg.get(
+                        "content", "") for msg in st.session_state.messages if msg.get("role") == "assistant"]
+                    if assistant_message.get("content") not in current_contents:
                         st.session_state.messages.append(assistant_message)
                         st.session_state.waiting_for_response = False
                         return True
-
         return False
-
     except Exception as e:
-        st.error(f"Error polling for response: {str(e)}")
-        st.session_state.waiting_for_response = False
+        print(f"Poll error: {str(e)}")
         return False
 
 
@@ -101,45 +104,78 @@ for message in st.session_state.messages:
             with st.chat_message("assistant", avatar="🤖"):
                 st.write(message["content"])
 
-if st.session_state.waiting_for_response:
-    with st.spinner("Đang chờ phản hồi..."):
-        has_new_response = poll_for_response()
-        if has_new_response:
-            st.rerun()
-
 # Chat input
 user_query = st.chat_input("Nhập câu hỏi của bạn...")
 
+# Auto refresh để liên tục poll khi đang chờ phản hồi
+if st.session_state.waiting_for_response:
+    # Hiển thị indicator
+    with st.chat_message("assistant", avatar="⏳"):
+        st.write("Đang xử lý...")
+
+    # Kiểm tra phản hồi mới
+    has_response = poll_for_response()
+    if has_response:
+        st.rerun()
+
+    # Tạo thời gian mới
+    st.markdown(
+        f"""
+        <p id="counter" style="display:none;">{time.time()}</p>
+        <script>
+            setTimeout(function() {{
+                window.location.reload();
+            }}, 2000);
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
 if user_query and not st.session_state.waiting_for_response:
+    # Add user message to chat
     st.session_state.messages.append({"role": "user", "content": user_query})
+
+    # Display user message
     with st.chat_message("user", avatar="👤"):
         st.write(user_query)
 
+    # Show processing indicator
     with st.chat_message("assistant", avatar="⏳"):
-        message_placeholder = st.empty()
-        message_placeholder.write("Đang xử lý...")
+        st.write("Đang xử lý...")
 
     try:
+        # Send request to server
         response = requests.post(
             f"{API_URL}/ask",
             json={
                 "query": user_query,
                 "session_id": st.session_state.session_id
-            }
+            },
+            timeout=5
         )
 
         if response.status_code == 200:
             st.session_state.waiting_for_response = True
-            st.session_state.last_query_time = time.time()
             st.rerun()
         else:
-            message_placeholder.error(
-                f"Lỗi: {response.status_code} - {response.text}")
+            error_msg = f"Lỗi: {response.status_code} - {response.text}"
+            st.error(error_msg)
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": error_msg
+            })
+            st.rerun()
 
     except Exception as e:
-        message_placeholder.error(f"Lỗi kết nối: {str(e)}")
+        error_msg = f"Lỗi kết nối: {str(e)}"
+        st.error(error_msg)
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": error_msg
+        })
+        st.rerun()
 
-# Sidebarn
+# Sidebar
 with st.sidebar:
     st.header("Các chuyên gia TechPlus")
 
@@ -171,7 +207,18 @@ with st.sidebar:
     ⏰ 08:00 - 21:00 (Thứ 2 - Chủ Nhật)""")
 
     st.divider()
-    st.caption(f"Session ID: {st.session_state.session_id}")
+
+    # Debug information
+    with st.expander("Thông tin"):
+        st.caption(f"Session ID: {st.session_state.session_id}")
+        st.caption(
+            f"Trạng thái: {'Đang chờ phản hồi' if st.session_state.waiting_for_response else 'Sẵn sàng'}")
+        st.caption(
+            f"Thời gian poll gần nhất: {st.session_state.last_poll_time}")
+
+        if st.button("Đặt lại trạng thái"):
+            st.session_state.waiting_for_response = False
+            st.rerun()
 
     # Button to clear chat
     if st.button("Xóa cuộc trò chuyện"):

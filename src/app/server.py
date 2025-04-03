@@ -17,11 +17,15 @@ async def lifespan(app: FastAPI):
     print("App is starting up...")
     # Initialize global agents that will be reused
     app.state.agent_router = AgentRouter()
+
+    # Đảm bảo khóa trong app.state.agents giống với AgentRouter.agent_types
     app.state.agents = {
         "product_advisor": ProductAdvisorAgent(),
         "policy_advisor": PolicyAdvisorAgent(),
         "general": GeneralAdvisorAgent(),
+        # Thêm các agent khác nếu có
     }
+
     # Set the default agent
     app.state.default_agent = app.state.agents["general"]
     yield
@@ -53,11 +57,6 @@ class ChatSession:
         self.current_response = None
 
 
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(cleanup_old_sessions())
-
-
 async def cleanup_old_sessions():
     while True:
         current_time = time.time()
@@ -87,14 +86,17 @@ async def process_chat_query(app: FastAPI, session_id: str, query: str, language
         agent_type = await app.state.agent_router.route_query(query)
         print("Agent type determined:", agent_type)
         print(f"Routing query to agent type: {agent_type}")
+        print(f"Available agents: {list(app.state.agents.keys())}")
 
         # Step 2: Get the appropriate agent
         agent_instance = app.state.agents.get(agent_type)
         if not agent_instance:
             # Fall back to general advisor if the specific agent type isn't implemented
-            agent_instance = app.state.default_agent
             print(
-                f"Agent type {agent_type} not found, falling back to general advisor")
+                f"Agent type {agent_type} not found in app.state.agents, falling back to general advisor")
+            agent_instance = app.state.default_agent
+        else:
+            print(f"Using agent: {agent_instance.agent.name}")
 
         # Step 3: Handle the query with the selected agent
         response_content = await agent_instance.handle_query(query, language)
@@ -190,6 +192,10 @@ async def get_session(session_id: str):
 
 @app.get("/poll/{session_id}")
 async def poll_session(session_id: str):
+    """
+    Poll server for response. This function is called repeatedly by the client to check for updates.
+    It needs to be fast and responsive to avoid timeouts and provide a good user experience.
+    """
     if session_id not in chat_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -203,7 +209,7 @@ async def poll_session(session_id: str):
             last_user_msg = None
             last_assistant_msg = None
 
-            # Find the last user and assistant messages
+            # Find the most recent user and assistant messages
             for msg in reversed(session.messages):
                 if msg["role"] == "user" and last_user_msg is None:
                     last_user_msg = msg
@@ -212,6 +218,11 @@ async def poll_session(session_id: str):
 
                 if last_user_msg is not None and last_assistant_msg is not None:
                     break
+
+            # Once client has received the response, reset the response_ready flag
+            if has_response:
+                session.response_ready = False
+                session.current_response = None
 
             return {
                 "session_id": session_id,
