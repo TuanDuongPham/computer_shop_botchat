@@ -5,8 +5,7 @@ python-dotenv==1.1.0
 tqdm==4.67.1
 markdown==3.7
 beautifulsoup4==4.13.3
-autogen-agentchat==0.4.9.3
-autogen-ext==0.4.9.3
+openai-agents==0.0.7
 requests==2.32.3
 streamlit==1.44.1
 fastapi[standard]==0.115.12

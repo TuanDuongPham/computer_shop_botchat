@@ -1,9 +1,8 @@
 from ..database.chroma import ChromaDB
 from ..services.enhance_search import EnhancedSearchService
 from ..services.vietnamese_llm_helper import VietnameseLLMHelper
-from autogen_agentchat.agents import AssistantAgent
-from autogen_ext.models.openai import OpenAIChatCompletionClient
-from openai import OpenAI
+from agents import Agent, Runner, function_tool, OpenAIChatCompletionsModel
+from openai import AsyncOpenAI
 from ..config import OPENAI_MODEL, OPENAI_API_KEY
 
 
@@ -11,17 +10,18 @@ class ProductAdvisorAgent:
     def __init__(self):
         self.vi_helper = VietnameseLLMHelper()
         self.search_service = EnhancedSearchService()
-        self.model_client = OpenAIChatCompletionClient(
+        self.model_client = model = OpenAIChatCompletionsModel(
             model=OPENAI_MODEL,
-            api_key=OPENAI_API_KEY,
+            openai_client=AsyncOpenAI()
         )
 
         # Create Autogen assistant
-        self.agent = AssistantAgent(
+        self.agent = Agent(
             name="ProductAdvisor",
-            model_client=self.model_client,
-            tools=[self.handle_query],
-            system_message="""Bạn là chuyên gia tư vấn linh kiện máy tính của cửa hàng TechPlus.
+            model=self.model_client,
+            handoff_description="Specialist agent for Products Advisor",
+            handoffs=[self.handle_query],
+            instructions="""Bạn là chuyên gia tư vấn linh kiện máy tính của cửa hàng TechPlus.
             Nhiệm vụ của bạn là tư vấn, cung cấp thông tin chi tiết, và so sánh các linh kiện máy tính.
             Khi một khách hàng đưa ra yêu cầu, hãy phân tích nhu cầu của họ và đưa ra các lựa chọn phù hợp.
             
@@ -35,10 +35,12 @@ class ProductAdvisorAgent:
             """,
         )
 
-    def search_products(self, query: str, language: str = "vi", n_results: int = 3):
+    @function_tool
+    async def search_products(self, query: str, language: str = "vi", n_results: int = 3):
         return self.search_service.search(query, language, n_results)
 
-    def handle_query(self, query: str, language: str = "vi"):
+    @function_tool
+    async def handle_query(self, query: str, language: str = "vi"):
         try:
             # Step 1: Search for products based on query
             search_results = self.search_products(query, language, n_results=5)
@@ -104,18 +106,15 @@ class ProductAdvisorAgent:
             """
 
             # Step 5: Generate response using the agent's LLM
-
-            client = OpenAI(api_key=OPENAI_API_KEY)
-            response = client.chat.completions.create(
-                model=OPENAI_MODEL,
+            response = await Runner.run(
+                self.agent,
                 messages=[
-                    {"role": "system", "content": self.agent.system_message},
+                    {"role": "system", "content": self.agent.instructions},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.5
             )
 
-            return response.choices[0].message.content
+            return response.final_output
 
         except Exception as e:
             print(f"Error in ProductAdvisorAgent.handle_query: {e}")
