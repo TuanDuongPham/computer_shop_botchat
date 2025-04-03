@@ -10,7 +10,6 @@ class GeneralAdvisorAgent:
             openai_client=AsyncOpenAI(api_key=OPENAI_API_KEY)
         )
 
-        # Create Autogen assistant
         self.agent = Agent(
             name="GeneralAdvisor",
             model=self.model_client,
@@ -51,10 +50,7 @@ class GeneralAdvisorAgent:
         )
 
     async def handle_query(self, query: str, language: str = "vi"):
-        """Handle a general query from a user."""
         try:
-            # For general queries, we'll directly use the model to generate a response
-            # Format the prompt with the user's query
             prompt = f"""
             Người dùng đã hỏi: "{query}"
             
@@ -63,7 +59,6 @@ class GeneralAdvisorAgent:
             hỏi cụ thể hơn để được kết nối với chuyên gia phù hợp.
             """
 
-            # Generate response using the agent
             response = await Runner.run(
                 self.agent,
                 [

@@ -38,17 +38,14 @@ class PolicyAdvisorAgent:
         )
 
     async def search_policy(self, query: str, language: str = "vi", n_results: int = 2):
-        """Search for relevant policy information based on the query."""
         search_results = self.policy_search.search_policy(
             query, language, n_results)
         return search_results
 
     async def format_policy_response(self, search_results):
-        """Format the policy search results into a readable response."""
         return self.policy_search.format_policy_response(search_results)
 
     async def handle_query(self, query: str, language: str = "vi"):
-        """Handle a policy-related query from a user."""
         try:
             # Step 1: Search for policy information based on query
             search_results = await self.search_policy(query, language, n_results=3)

@@ -1,6 +1,8 @@
 from src.agents.agent_router import AgentRouter
 from src.agents.product_advisor import ProductAdvisorAgent
 from src.agents.policy_advisor import PolicyAdvisorAgent
+from src.agents.pc_builder import PCBuilderAgent
+from src.agents.order_processor import OrderProcessorAgent
 from src.agents.general_advisor import GeneralAdvisorAgent
 import streamlit as st
 import uuid
@@ -13,27 +15,6 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(os.path.dirname(current_dir))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
-
-# Khởi tạo session state TRƯỚC KHI nhập bất kỳ module tùy chỉnh nào
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if "processing" not in st.session_state:
-    st.session_state.processing = False
-
-if "initialized" not in st.session_state:
-    st.session_state.initialized = False
-
-if "session_id" not in st.session_state:
-    st.session_state.session_id = str(uuid.uuid4())
-
-
-# Cấu hình trang
-st.set_page_config(
-    page_title="TechPlus Hardware Advisor",
-    page_icon="🔧",
-    layout="wide"
-)
 
 # Initialize session state
 if "session_id" not in st.session_state:
@@ -57,7 +38,14 @@ if "agents" not in st.session_state:
 if "default_agent" not in st.session_state:
     st.session_state.default_agent = None
 
-# Define agent emoji icons
+
+st.set_page_config(
+    page_title="TechPlus Hardware Advisor",
+    page_icon="🔧",
+    layout="wide"
+)
+
+
 agent_icons = {
     "GeneralAdvisor": "🤖",
     "ProductAdvisor": "💻",
@@ -67,7 +55,6 @@ agent_icons = {
     "CustomerService": "👤"
 }
 
-# Define agent names
 agent_names = {
     "GeneralAdvisor": "Trợ lý chung",
     "ProductAdvisor": "Chuyên gia linh kiện",
@@ -77,11 +64,8 @@ agent_names = {
     "CustomerService": "Dịch vụ khách hàng"
 }
 
-# Page header
 st.title("🔧 TechPlus Hardware Advisor")
 st.markdown("Chào mừng bạn đến với hệ thống tư vấn của TechPlus! Hãy hỏi tôi về linh kiện, chính sách của cửa hàng, hoặc để tôi giúp bạn xây dựng cấu hình PC phù hợp.")
-
-# Hàm khởi tạo các agent - chỉ chạy 1 lần khi ứng dụng khởi động
 
 
 def initialize_agents():
@@ -89,40 +73,31 @@ def initialize_agents():
         return
 
     with st.spinner("Đang khởi tạo hệ thống trợ lý..."):
-        # Khởi tạo router
         st.session_state.agent_router = AgentRouter()
 
-        # Khởi tạo các agent cụ thể
         st.session_state.agents = {
             "product_advisor": ProductAdvisorAgent(),
             "policy_advisor": PolicyAdvisorAgent(),
+            "pc_builder": PCBuilderAgent(),
+            "order_processor": OrderProcessorAgent(),
             "general": GeneralAdvisorAgent(),
         }
 
-        # Set agent mặc định
         st.session_state.default_agent = st.session_state.agents["general"]
 
-        # Đánh dấu đã khởi tạo
         st.session_state.initialized = True
-
-# Hàm xử lý câu hỏi từ người dùng
 
 
 async def process_query(query, language="vi"):
     try:
-        # Xác định loại agent cần dùng
         agent_type = await st.session_state.agent_router.route_query(query)
 
-        # Lấy agent phù hợp
         agent_instance = st.session_state.agents.get(agent_type)
         if not agent_instance:
-            # Fallback sang agent mặc định
             agent_instance = st.session_state.default_agent
 
-        # Xử lý câu hỏi với agent được chọn
         response = await agent_instance.handle_query(query, language)
 
-        # Tạo response object với metadata của agent
         agent_response = {
             "content": response,
             "sender": agent_instance.agent.name
@@ -144,8 +119,6 @@ async def process_query(query, language="vi"):
             }]
         }
 
-# Wrapper để chạy async function trong Streamlit
-
 
 def run_async_query(query):
     try:
@@ -155,11 +128,9 @@ def run_async_query(query):
         response = loop.run_until_complete(process_query(query))
         loop.close()
 
-        # Đảm bảo messages đã được khởi tạo
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-        # Thêm response vào messages
         st.session_state.messages.append(response)
     except Exception as e:
         st.error(f"Lỗi xử lý câu hỏi: {str(e)}")
@@ -167,10 +138,8 @@ def run_async_query(query):
         st.session_state.processing = False
 
 
-# Khởi tạo agents khi ứng dụng khởi động
 initialize_agents()
 
-# Display chat messages
 for message in st.session_state.messages:
     if message["role"] == "user":
         with st.chat_message("user", avatar="👤"):
@@ -185,7 +154,6 @@ for message in st.session_state.messages:
                 with st.chat_message("assistant", avatar=icon):
                     st.write(content)
 
-                    # Show which agent responded
                     agent_name = agent_names.get(sender, sender)
                     st.caption(f"Trả lời bởi: {agent_name}")
         else:
@@ -202,23 +170,19 @@ else:
     user_query = st.chat_input("Nhập câu hỏi của bạn...")
 
     if user_query:
-        # Add user message to chat
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
         st.session_state.messages.append(
             {"role": "user", "content": user_query})
         st.session_state.processing = True
-        st.rerun()  # Rerun để hiển thị spinner
+        st.rerun()
 
-# Nếu đang xử lý và chưa có kết quả, thực hiện xử lý
 if st.session_state.processing:
     with st.spinner("Đang xử lý..."):
-        # Xử lý câu hỏi trực tiếp, không qua thread
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        # Lấy câu hỏi cuối cùng từ user
         user_messages = [
             m for m in st.session_state.messages if m["role"] == "user"]
         if user_messages:
@@ -229,7 +193,7 @@ if st.session_state.processing:
             st.session_state.messages.append(response)
 
         st.session_state.processing = False
-        st.rerun()  # Rerun để hiển thị kết quả
+        st.rerun()
 
 # Sidebar
 with st.sidebar:
