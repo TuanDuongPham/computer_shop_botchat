@@ -1,7 +1,7 @@
 from src.database.chroma import ChromaDB
 from src.services.enhance_search import EnhancedSearchService
 from src.services.vietnamese_llm_helper import VietnameseLLMHelper
-from agents import Agent, Runner, function_tool, OpenAIChatCompletionsModel
+from agents import Agent, Runner, FunctionTool, OpenAIChatCompletionsModel, function_tool
 from openai import AsyncOpenAI
 from src.config import OPENAI_MODEL, OPENAI_API_KEY
 
@@ -35,12 +35,10 @@ class ProductAdvisorAgent:
             """,
         )
 
-    @function_tool
     async def search_products(self, query: str, language: str = "vi", n_results: int = 3):
         """Search for products based on the query."""
         return self.search_service.search(query, language, n_results)
 
-    @function_tool
     async def handle_query(self, query: str, language: str = "vi"):
         """Handle a product-related query from a user."""
         try:
@@ -110,7 +108,7 @@ class ProductAdvisorAgent:
             # Step 5: Generate response using the agent
             response = await Runner.run(
                 self.agent,
-                messages=[
+                [
                     {"role": "system", "content": self.agent.instructions},
                     {"role": "user", "content": prompt}
                 ],

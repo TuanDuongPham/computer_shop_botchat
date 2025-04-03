@@ -85,6 +85,7 @@ async def process_chat_query(app: FastAPI, session_id: str, query: str, language
 
         # Step 1: Route the query to the appropriate agent type
         agent_type = await app.state.agent_router.route_query(query)
+        print("Agent type determined:", agent_type)
         print(f"Routing query to agent type: {agent_type}")
 
         # Step 2: Get the appropriate agent

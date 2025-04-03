@@ -1,4 +1,4 @@
-from agents import Agent, Runner, function_tool, OpenAIChatCompletionsModel
+from agents import Agent, Runner, FunctionTool, OpenAIChatCompletionsModel, function_tool
 from openai import AsyncOpenAI
 from src.config import OPENAI_MODEL, OPENAI_API_KEY
 
@@ -50,7 +50,6 @@ class GeneralAdvisorAgent:
             """,
         )
 
-    @function_tool
     async def handle_query(self, query: str, language: str = "vi"):
         """Handle a general query from a user."""
         try:
@@ -67,7 +66,7 @@ class GeneralAdvisorAgent:
             # Generate response using the agent
             response = await Runner.run(
                 self.agent,
-                messages=[
+                [
                     {"role": "system", "content": self.agent.instructions},
                     {"role": "user", "content": prompt}
                 ],

@@ -13,7 +13,7 @@ class AgentRouter:
             "policy_advisor": "Tư vấn chính sách cửa hàng",
             "pc_builder": "Tư vấn xây dựng PC",
             "order_processor": "Xác nhận đặt hàng và gửi email",
-            "general": "Chào hỏi và hỏi đáp chung"
+            "general_advisor": "Chào hỏi và hỏi đáp chung"
         }
 
         # Initialize OpenAI model client
@@ -30,11 +30,11 @@ class AgentRouter:
             Bạn là một AI phân loại ý định của người dùng trong cửa hàng máy tính. 
             Phân loại đoạn text vào một trong các danh mục sau:
             
-            1. product_advisor: Các câu hỏi về thông tin, tư vấn, so sánh linh kiện máy tính
+            1. product_advisor: Các câu hỏi về thông tin, tư vấn, so sánh linh kiện máy tính, ao gồm các sản phẩm như CPU, GPU, RAM, Mainboard, SSD, HDD, PSU, Case máy tính
             2. policy_advisor: Các câu hỏi về chính sách cửa hàng, bảo hành, đổi trả, thanh toán
-            3. pc_builder: Yêu cầu xây dựng cấu hình PC hoàn chỉnh theo nhu cầu
+            3. pc_builder: Yêu cầu xây dựng cấu hình PC hoàn chỉnh theo nhu cầu dựa trên các sản phẩm có trong cơ sở dữ liệu của cửa hàng
             4. order_processor: Yêu cầu đặt hàng, xác nhận đơn hàng, thanh toán
-            5. general: Chào hỏi, hỏi đáp chung không liên quan đến 4 loại trên
+            5. general_advisor: Chào hỏi, hỏi đáp chung không liên quan đến 4 loại trên
             
             Trả về kết quả dưới dạng JSON với format:
             {
@@ -55,11 +55,8 @@ class AgentRouter:
             # Use the Runner to execute the agent
             response = await Runner.run(
                 self.intent_classifier,
-                messages=[
-                    {"role": "system", "content": self.intent_classifier.instructions},
-                    {"role": "user", "content": prompt}
-                ],
-                response_format={"type": "json_object"}
+                [{"role": "system", "content": self.intent_classifier.instructions},
+                 {"role": "user", "content": prompt}]
             )
 
             # Extract the JSON response
@@ -83,11 +80,12 @@ class AgentRouter:
 
         # Otherwise use intent classification
         intent_result = await self.classify_intent(user_query)
+        print("intent_result", intent_result)
         intent = intent_result.get("intent", "general")
+        print("intent", intent)
         confidence = intent_result.get("confidence", 0)
 
-        # If confidence is low, default to general
-        if confidence < 0.6:
+        if confidence < 0.5:
             return "general"
 
         return intent

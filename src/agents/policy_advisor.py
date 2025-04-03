@@ -1,6 +1,5 @@
 from src.services.policy_search import PolicySearchService
-from src.services.vietnamese_llm_helper import VietnameseLLMHelper
-from agents import Agent, Runner, function_tool, OpenAIChatCompletionsModel
+from agents import Agent, Runner, FunctionTool, OpenAIChatCompletionsModel, function_tool
 from openai import AsyncOpenAI
 from src.config import OPENAI_MODEL, OPENAI_API_KEY
 
@@ -8,7 +7,6 @@ from src.config import OPENAI_MODEL, OPENAI_API_KEY
 class PolicyAdvisorAgent:
     def __init__(self):
         self.policy_search = PolicySearchService()
-        self.vi_helper = VietnameseLLMHelper()
         self.model_client = OpenAIChatCompletionsModel(
             model=OPENAI_MODEL,
             openai_client=AsyncOpenAI(api_key=OPENAI_API_KEY)
@@ -39,19 +37,16 @@ class PolicyAdvisorAgent:
             """,
         )
 
-    @function_tool
     async def search_policy(self, query: str, language: str = "vi", n_results: int = 2):
         """Search for relevant policy information based on the query."""
         search_results = self.policy_search.search_policy(
             query, language, n_results)
         return search_results
 
-    @function_tool
     async def format_policy_response(self, search_results):
         """Format the policy search results into a readable response."""
         return self.policy_search.format_policy_response(search_results)
 
-    @function_tool
     async def handle_query(self, query: str, language: str = "vi"):
         """Handle a policy-related query from a user."""
         try:
@@ -110,7 +105,7 @@ class PolicyAdvisorAgent:
             # Step 5: Generate response using the agent
             response = await Runner.run(
                 self.agent,
-                messages=[
+                [
                     {"role": "system", "content": self.agent.instructions},
                     {"role": "user", "content": prompt}
                 ],
