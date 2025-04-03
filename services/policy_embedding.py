@@ -1,6 +1,5 @@
 import re
 import uuid
-import os
 from typing import List, Dict, Tuple, Any, Optional
 import markdown
 from bs4 import BeautifulSoup

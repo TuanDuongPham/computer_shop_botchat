@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from openai import OpenAI
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from ..config import OPENAI_API_KEY, OPENAI_MODEL
 import json
 
 

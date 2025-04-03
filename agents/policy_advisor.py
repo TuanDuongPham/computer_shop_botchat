@@ -1,12 +1,13 @@
-from services.policy_search import PolicySearchService
-from services.vietnamese_llm_helper import VietnameseLLMHelper
+from ..services.policy_search import PolicySearchService
+from ..services.vietnamese_llm_helper import VietnameseLLMHelper
 from autogen_agentchat.agents import AssistantAgent
 from autogen_ext.models.openai import OpenAIChatCompletionClient
-from config import OPENAI_MODEL, OPENAI_API_KEY
+from openai import OpenAI
+from ..config import OPENAI_MODEL, OPENAI_API_KEY
 
 
 class PolicyAdvisorAgent:
-    def __init__(self, llm_config=None):
+    def __init__(self):
         self.policy_search = PolicySearchService()
         self.vi_helper = VietnameseLLMHelper()
         self.model_client = OpenAIChatCompletionClient(
@@ -17,8 +18,8 @@ class PolicyAdvisorAgent:
         # Create Autogen assistant
         self.agent = AssistantAgent(
             name="PolicyAdvisor",
-            tools=[self.search_policy,
-                   self.format_policy_response, self.handle_query],
+            model_client=self.model_client,
+            tools=[self.handle_query],
             system_message="""Bạn là chuyên gia về chính sách của cửa hàng TechPlus.
             Nhiệm vụ của bạn là giải đáp các thắc mắc liên quan đến chính sách của cửa hàng, bao gồm:
             - Chính sách bảo hành
@@ -38,24 +39,26 @@ class PolicyAdvisorAgent:
             """,
         )
 
-    def search_policy(self, query: str, language: str = "vi", n_results: int = 2):
+    def search_policy_agent(self, query: str, language: str = "vi", n_results: int = 2):
         search_results = self.policy_search.search_policy(
             query, language, n_results)
         return search_results
 
-    def format_policy_response(self, search_results):
+    def format_policy_response_agent(self, search_results):
         return self.policy_search.format_policy_response(search_results)
 
     def handle_query(self, query: str, language: str = "vi"):
         try:
             # Step 1: Search for policy information based on query
-            search_results = self.search_policy(query, language, n_results=3)
+            search_results = self.search_policy_agent(
+                query, language, n_results=3)
 
             if not search_results or not search_results.get('results') or not search_results['results'].get('documents'):
                 return "Xin lỗi, tôi không tìm thấy thông tin chính sách liên quan đến câu hỏi của bạn. Bạn có thể nêu cụ thể hơn hoặc hỏi về chủ đề khác như 'bảo hành', 'đổi trả', 'thanh toán' không?"
 
             # Step 2: Format policy information
-            formatted_policy = self.format_policy_response(search_results)
+            formatted_policy = self.format_policy_response_agent(
+                search_results)
 
             # Step 3: Combine the policy information with enhanced content
             # Get original query and enhanced query for context
@@ -101,9 +104,6 @@ class PolicyAdvisorAgent:
             """
 
             # Step 5: Generate response using the agent's LLM
-            from openai import OpenAI
-            from config import OPENAI_API_KEY, OPENAI_MODEL
-
             client = OpenAI(api_key=OPENAI_API_KEY)
             response = client.chat.completions.create(
                 model=OPENAI_MODEL,

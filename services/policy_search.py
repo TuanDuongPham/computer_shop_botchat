@@ -1,6 +1,6 @@
 from database.chroma import ChromaDB
-from services.vietnamese_llm_helper import VietnameseLLMHelper
-from services.reranking import RerankerService
+from .vietnamese_llm_helper import VietnameseLLMHelper
+from .reranking import RerankerService
 from typing import Dict, List, Any, Optional
 
 

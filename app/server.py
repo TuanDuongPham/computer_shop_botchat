@@ -5,6 +5,7 @@ import asyncio
 import time
 import threading
 import uuid
+from ..agents.agent_router import AgentRouter
 
 
 @asynccontextmanager
@@ -77,16 +78,17 @@ def process_chat_query(session_id: str, query: str):
                         "sender": sender
                     })
 
-            # Extract the user proxy agent
-            user_proxy = agents["user_proxy"]
+            # Extract the general agent from the router
+            agents = AgentRouter()
+            general_agent = agents.agent_types["general"]
 
             # Set the response callback
-            for agent_name, agent in agents.items():
+            for agent in agents.agent_types:
                 if hasattr(agent, "register_reply_callback"):
                     agent.register_reply_callback(response_callback)
 
-            # Initiate the chat with the user query
-            user_proxy.initiate_chat(
+            # Initiate the chat with the general agent
+            general_agent.initiate_chat(
                 agents["manager"],
                 message=query,
                 clear_history=False
@@ -130,6 +132,7 @@ def process_chat_query(session_id: str, query: str):
 
     except Exception as e:
         error_message = f"Lỗi khi xử lý truy vấn: {str(e)}"
+        print(error_message)
         if session_id in chat_sessions:
             session = chat_sessions[session_id]
             session.messages.append({

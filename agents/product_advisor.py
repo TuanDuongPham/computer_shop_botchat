@@ -1,9 +1,10 @@
-from database.chroma import ChromaDB
-from services.enhance_search import EnhancedSearchService
-from services.vietnamese_llm_helper import VietnameseLLMHelper
+from ..database.chroma import ChromaDB
+from ..services.enhance_search import EnhancedSearchService
+from ..services.vietnamese_llm_helper import VietnameseLLMHelper
 from autogen_agentchat.agents import AssistantAgent
 from autogen_ext.models.openai import OpenAIChatCompletionClient
-from config import OPENAI_MODEL, OPENAI_API_KEY
+from openai import OpenAI
+from ..config import OPENAI_MODEL, OPENAI_API_KEY
 
 
 class ProductAdvisorAgent:
@@ -19,7 +20,7 @@ class ProductAdvisorAgent:
         self.agent = AssistantAgent(
             name="ProductAdvisor",
             model_client=self.model_client,
-            tools=[self.search_products, self.handle_query],
+            tools=[self.handle_query],
             system_message="""Bạn là chuyên gia tư vấn linh kiện máy tính của cửa hàng TechPlus.
             Nhiệm vụ của bạn là tư vấn, cung cấp thông tin chi tiết, và so sánh các linh kiện máy tính.
             Khi một khách hàng đưa ra yêu cầu, hãy phân tích nhu cầu của họ và đưa ra các lựa chọn phù hợp.
@@ -103,8 +104,6 @@ class ProductAdvisorAgent:
             """
 
             # Step 5: Generate response using the agent's LLM
-            from openai import OpenAI
-            from config import OPENAI_API_KEY, OPENAI_MODEL
 
             client = OpenAI(api_key=OPENAI_API_KEY)
             response = client.chat.completions.create(
