@@ -171,11 +171,6 @@ class AgentRouter:
             }
 
     async def route_query(self, user_query: str) -> str:
-        # If query is very short or seems like a greeting, route directly to general
-        if len(user_query.strip()) < 10 or any(greeting in user_query.lower() for greeting in
-                                               ["xin chào", "hello", "hi", "chào", "hey", "good morning", "tạm biệt", "cảm ơn"]):
-            return "general"
-
         # Otherwise use intent classification
         intent_result = await self.classify_intent(user_query)
         print("intent_result", intent_result)

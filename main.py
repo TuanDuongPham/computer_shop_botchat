@@ -50,9 +50,9 @@ def main():
     # print(policy_info)
 
     # Run chat app
-    subprocess.Popen(["uvicorn", "src.app.server:app",
-                     "--reload", "--port", "8000"])
-    # subprocess.Popen(["streamlit", "run", "src/app/app.py"])
+    # subprocess.Popen(["uvicorn", "src.app.server:app",
+    #                  "--reload", "--port", "8000"])
+    subprocess.Popen(["streamlit", "run", "app.py"])
 
 
 if __name__ == "__main__":

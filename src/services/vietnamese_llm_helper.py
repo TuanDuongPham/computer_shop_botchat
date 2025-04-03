@@ -1,9 +1,8 @@
 from openai import OpenAI
 from src.config import OPENAI_API_KEY
 
-# Danh mục sản phẩm và tên tiếng Việt
 CATEGORY_TRANSLATIONS = {
-    "CPU": ["Nhân", "Vi xử lý", "Bộ xử lý", "Core", "Processor"],
+    "CPU": ["Nhân", "Vi xử lý", "Bộ xử lý", "Core", "Processor", "Chip", "CPU Intel", "CPU AMD", "Xử lý", "Xử lý trung tâm"],
     "Motherboard": ["Bo mạch chủ", "Mainboard", "Main"],
     "RAM": ["RAM", "Bộ nhớ", "Memory"],
     "SSD": ["Ổ cứng thể rắn", "Ổ SSD", "Solid State Drive"],
@@ -15,7 +14,14 @@ CATEGORY_TRANSLATIONS = {
     "Case": ["Vỏ máy tính", "Thùng máy", "Case"],
 }
 
-# Thông số kỹ thuật cho từng danh mục
+COMMON_BRANDS = {
+    "CPU": ["Intel", "AMD", "Ryzen", "Core i3", "Core i5", "Core i7", "Core i9", "Xeon", "Pentium", "Celeron"],
+    "GPU": ["NVIDIA", "AMD", "RTX", "GTX", "Radeon"],
+    "Motherboard": ["ASUS", "Gigabyte", "MSI", "ASRock"],
+    "RAM": ["Corsair", "Kingston", "G.Skill", "Crucial", "ADATA", "TeamGroup"],
+    "Storage": ["Samsung", "Western Digital", "Seagate", "Crucial", "Kingston"],
+}
+
 SPEC_MAPPINGS = {
     "CPU": {
         "socket": ["socket", "đế cắm"],
@@ -118,6 +124,12 @@ class VietnameseLLMHelper:
             vietnamese_list = ", ".join(vietnamese_terms)
             category_mappings += f"- {english_term}: {vietnamese_list}\n"
 
+        # Chuẩn bị từ điển thương hiệu để đưa vào prompt
+        brand_mappings = ""
+        for category, brands in COMMON_BRANDS.items():
+            brand_list = ", ".join(brands)
+            brand_mappings += f"- {category}: {brand_list}\n"
+
         # Chuẩn bị từ điển thông số kỹ thuật để đưa vào prompt
         spec_mappings_text = ""
         for category, specs in SPEC_MAPPINGS.items():
@@ -136,6 +148,9 @@ class VietnameseLLMHelper:
 
             DANH MỤC SẢN PHẨM:
             {category_mappings}
+            
+            THƯƠNG HIỆU PHỔ BIẾN:
+            {brand_mappings}
 
             THÔNG SỐ KỸ THUẬT CHO TỪNG DANH MỤC:
             {spec_mappings_text}
@@ -145,7 +160,8 @@ class VietnameseLLMHelper:
             2. Thêm các thuật ngữ tiếng Anh tương ứng từ danh sách DANH MỤC SẢN PHẨM
             3. Xác định các thông số kỹ thuật được đề cập trong truy vấn và thêm các thuật ngữ tiếng Anh tương ứng từ danh sách THÔNG SỐ KỸ THUẬT
             4. Nếu truy vấn chứa giá tiền, hãy chuyển đổi nó thành USD (1 triệu VND = 40 USD)
-            5. Chỉ trả về truy vấn đã được nâng cao mà KHÔNG có bất kỳ giải thích nào, chỉ trả về văn bản truy vấn
+            5. Nếu truy vấn chứa từ "chip", bạn phải nhận diện đó là đang nói đến "CPU" hoặc "processor"
+            6. Chỉ trả về truy vấn đã được nâng cao mà KHÔNG có bất kỳ giải thích nào, chỉ trả về văn bản truy vấn
 
             Ví dụ 1:
             Cho "tản nhiệt nước cho CPU Intel socket LGA1700" bạn có thể trả về:
@@ -160,9 +176,9 @@ class VietnameseLLMHelper:
             "Motherboard mainboard memory type DDR5 speed 6000MHz m2 slots storage expansion"
             
             Ví dụ 4:
-            Cho "tản nhiệt nước cho CPU Intel có hiệu quả cao" bạn có thể trả về:
-            "water cooling Cooler liquid-cooled AIO Intel LGA1700 effective thermal performance"
-
+            Cho "chip intel core i5 14600K" bạn có thể trả về:
+            "CPU processor Intel Core i5 14600K chip high performance"
+            
             Ví dụ 5:
             Cho "cần card đồ họa chơi game tốt dưới 5 triệu" bạn có thể trả về:
             "Graphics Card gaming performance budget affordable below 200 USD"
@@ -177,6 +193,7 @@ class VietnameseLLMHelper:
             )
 
             enhanced_query = response.choices[0].message.content.strip()
+            print(f"Enhanced query: \"{enhanced_query}\"")
             return enhanced_query
 
         except Exception as e:
