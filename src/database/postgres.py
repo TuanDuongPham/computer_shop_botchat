@@ -1,6 +1,6 @@
 import json
 import psycopg2
-from config import POSTGRES_CONFIG
+from src.config import POSTGRES_CONFIG
 
 
 class PostgresDB:

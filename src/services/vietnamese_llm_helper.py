@@ -1,5 +1,5 @@
 from openai import OpenAI
-from config import OPENAI_API_KEY
+from src.config import OPENAI_API_KEY
 
 # Danh mục sản phẩm và tên tiếng Việt
 CATEGORY_TRANSLATIONS = {

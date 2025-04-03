@@ -1,21 +1,21 @@
-from ..database.chroma import ChromaDB
-from ..services.enhance_search import EnhancedSearchService
-from ..services.vietnamese_llm_helper import VietnameseLLMHelper
+from src.database.chroma import ChromaDB
+from src.services.enhance_search import EnhancedSearchService
+from src.services.vietnamese_llm_helper import VietnameseLLMHelper
 from agents import Agent, Runner, function_tool, OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
-from ..config import OPENAI_MODEL, OPENAI_API_KEY
+from src.config import OPENAI_MODEL, OPENAI_API_KEY
 
 
 class ProductAdvisorAgent:
     def __init__(self):
         self.vi_helper = VietnameseLLMHelper()
         self.search_service = EnhancedSearchService()
-        self.model_client = model = OpenAIChatCompletionsModel(
+        self.model_client = OpenAIChatCompletionsModel(
             model=OPENAI_MODEL,
-            openai_client=AsyncOpenAI()
+            openai_client=AsyncOpenAI(api_key=OPENAI_API_KEY)
         )
 
-        # Create Autogen assistant
+        # Create agent using OpenAI Agent SDK
         self.agent = Agent(
             name="ProductAdvisor",
             model=self.model_client,
@@ -37,13 +37,15 @@ class ProductAdvisorAgent:
 
     @function_tool
     async def search_products(self, query: str, language: str = "vi", n_results: int = 3):
+        """Search for products based on the query."""
         return self.search_service.search(query, language, n_results)
 
     @function_tool
     async def handle_query(self, query: str, language: str = "vi"):
+        """Handle a product-related query from a user."""
         try:
             # Step 1: Search for products based on query
-            search_results = self.search_products(query, language, n_results=5)
+            search_results = await self.search_products(query, language, n_results=5)
 
             if not search_results or not search_results.get('documents') or not search_results['documents'][0]:
                 return "Xin lỗi, tôi không tìm thấy sản phẩm nào phù hợp với yêu cầu của bạn. Bạn có thể mô tả chi tiết hơn không?"
@@ -105,7 +107,7 @@ class ProductAdvisorAgent:
             Định dạng câu trả lời rõ ràng, có cấu trúc dễ đọc.
             """
 
-            # Step 5: Generate response using the agent's LLM
+            # Step 5: Generate response using the agent
             response = await Runner.run(
                 self.agent,
                 messages=[

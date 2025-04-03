@@ -1,9 +1,9 @@
 import chromadb
-from chromadb.utils import embedding_functions
-from config import OPENAI_API_KEY, OPENAI_EMBEDDING_MODEL
 import re
 import uuid
-from services.enhance_product_embedding import generate_enhanced_product_document
+from chromadb.utils import embedding_functions
+from src.config import OPENAI_API_KEY, OPENAI_EMBEDDING_MODEL
+from src.services.enhance_product_embedding import generate_enhanced_product_document
 
 
 class ChromaDB:

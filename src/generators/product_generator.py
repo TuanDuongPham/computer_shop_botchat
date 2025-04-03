@@ -1,7 +1,7 @@
 import json
 import time
 from openai import OpenAI
-from config import OPENAI_API_KEY, OPENAI_MODEL, PRODUCT_CATEGORIES, BATCH_SIZE, MAX_BATCH_ATTEMPTS
+from src.config import OPENAI_API_KEY, OPENAI_MODEL, PRODUCT_CATEGORIES, BATCH_SIZE, MAX_BATCH_ATTEMPTS
 
 
 class ProductGenerator:

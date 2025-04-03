@@ -1,12 +1,16 @@
-from database.chroma import ChromaDB
-from database.postgres import PostgresDB
-from generators.product_generator import ProductGenerator
-from services.vietnamese_llm_helper import VietnameseLLMHelper
-from services.policy_embedding import PolicyEmbeddingService
-from services.policy_search import PolicySearchService
-from services.enhance_search import EnhancedSearchService
+from src.database.chroma import ChromaDB
+from src.database.postgres import PostgresDB
+from src.generators.product_generator import ProductGenerator
+from src.services.vietnamese_llm_helper import VietnameseLLMHelper
+from src.services.policy_embedding import PolicyEmbeddingService
+from src.services.policy_search import PolicySearchService
+from src.services.enhance_search import EnhancedSearchService
 import subprocess
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..")))
 
 
 def main():
@@ -14,7 +18,7 @@ def main():
     # chroma_db_products = ChromaDB().connect(collection_name="computer_parts")
     # chroma_db_policies = ChromaDB().connect(collection_name="policies")
 
-    vi_helper = VietnameseLLMHelper()
+    # vi_helper = VietnameseLLMHelper()
 
     # Generate Products data and add to Chroma DB
     # generator = ProductGenerator(postgres_db, chroma_db)
@@ -46,8 +50,8 @@ def main():
     # print(policy_info)
 
     # Run chat app
-    subprocess.Popen("start cmd /k fastapi dev app/server.py", shell=True)
-    subprocess.Popen("start cmd /k streamlit run app/app.py", shell=True)
+    subprocess.Popen("start cmd /k fastapi dev src/app/server.py", shell=True)
+    subprocess.Popen("start cmd /k streamlit run src/app/app.py", shell=True)
 
 
 if __name__ == "__main__":

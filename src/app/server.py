@@ -1,18 +1,32 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.concurrency import run_in_threadpool
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 import asyncio
 import time
 import threading
 import uuid
-from ..agents.agent_router import AgentRouter
+from src.agents.agent_router import AgentRouter
+from src.agents.product_advisor import ProductAdvisorAgent
+from src.agents.policy_advisor import PolicyAdvisorAgent
+from src.agents.general_advisor import GeneralAdvisorAgent
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("App is starting up...")
+    # Initialize global agents that will be reused
+    app.state.agent_router = AgentRouter()
+    app.state.agents = {
+        "product_advisor": ProductAdvisorAgent(),
+        "policy_advisor": PolicyAdvisorAgent(),
+        "general": GeneralAdvisorAgent(),
+    }
+    # Set the default agent
+    app.state.default_agent = app.state.agents["general"]
     yield
     print("App is shutting down...")
+
 
 app = FastAPI(title="TechPlus Hardware Advisor API", lifespan=lifespan)
 chat_sessions = {}
@@ -35,6 +49,8 @@ class ChatSession:
         self.messages = []
         self.last_activity = time.time()
         self.lock = threading.Lock()
+        self.response_ready = False
+        self.current_response = None
 
 
 @app.on_event("startup")
@@ -63,63 +79,59 @@ def read_root():
     return {"message": "TechPlus Hardware Advisor API"}
 
 
-def process_chat_query(session_id: str, query: str):
+async def process_chat_query(app: FastAPI, session_id: str, query: str, language: str = "vi"):
     try:
         session = chat_sessions[session_id]
+
+        # Step 1: Route the query to the appropriate agent type
+        agent_type = await app.state.agent_router.route_query(query)
+        print(f"Routing query to agent type: {agent_type}")
+
+        # Step 2: Get the appropriate agent
+        agent_instance = app.state.agents.get(agent_type)
+        if not agent_instance:
+            # Fall back to general advisor if the specific agent type isn't implemented
+            agent_instance = app.state.default_agent
+            print(
+                f"Agent type {agent_type} not found, falling back to general advisor")
+
+        # Step 3: Handle the query with the selected agent
+        response_content = await agent_instance.handle_query(query, language)
+
+        # Step 4: Store the response
         with session.lock:
-            # Initialize a response collector
-            response_collector = []
+            # Add to session messages
+            session.messages.append({
+                "role": "user",
+                "content": query
+            })
 
-            # Use a callback to collect the agent's response
-            def response_callback(content: str, sender):
-                if sender != "CustomerService":  # Don't include user proxy messages
-                    response_collector.append({
-                        "content": content,
-                        "sender": sender
-                    })
+            # Create response object with agent metadata
+            agent_response = {
+                "content": response_content,
+                "sender": agent_instance.agent.name
+            }
 
-            # Extract the general agent from the router
-            agents = AgentRouter()
-            general_agent = agents.agent_types["general"]
+            # Add the response to messages
+            session.messages.append({
+                "role": "assistant",
+                "content": response_content,
+                "agent_responses": [agent_response]
+            })
 
-            # Set the response callback
-            for agent in agents.agent_types:
-                if hasattr(agent, "register_reply_callback"):
-                    agent.register_reply_callback(response_callback)
+            # Mark response as ready for polling
+            session.response_ready = True
+            session.current_response = response_content
+            session.last_activity = time.time()
 
-            # Initiate the chat with the general agent
-            general_agent.initiate_chat(
-                agents["manager"],
-                message=query,
-                clear_history=False
-            )
+            return response_content
 
-            # Process all responses and combine them
-            if response_collector:
-                combined_response = ""
-                for response_item in response_collector:
-                    agent_name = response_item["sender"]
-                    content = response_item["content"]
-
-                    if combined_response:
-                        combined_response += f"\n\n"
-
-                    combined_response += content
-
-                # Add to session messages
-                session.messages.append({
-                    "role": "user",
-                    "content": query
-                })
-                session.messages.append({
-                    "role": "assistant",
-                    "content": combined_response,
-                    "agent_responses": response_collector
-                })
-
-                return combined_response
-            else:
-                error_message = "Không nhận được phản hồi từ các chuyên gia. Vui lòng thử lại."
+    except Exception as e:
+        error_message = f"Lỗi khi xử lý truy vấn: {str(e)}"
+        print(error_message)
+        if session_id in chat_sessions:
+            session = chat_sessions[session_id]
+            with session.lock:
                 session.messages.append({
                     "role": "user",
                     "content": query
@@ -128,21 +140,8 @@ def process_chat_query(session_id: str, query: str):
                     "role": "assistant",
                     "content": error_message
                 })
-                return error_message
-
-    except Exception as e:
-        error_message = f"Lỗi khi xử lý truy vấn: {str(e)}"
-        print(error_message)
-        if session_id in chat_sessions:
-            session = chat_sessions[session_id]
-            session.messages.append({
-                "role": "user",
-                "content": query
-            })
-            session.messages.append({
-                "role": "assistant",
-                "content": error_message
-            })
+                session.response_ready = True
+                session.current_response = error_message
         return error_message
 
 
@@ -157,9 +156,16 @@ async def ask_query(request: QueryRequest, background_tasks: BackgroundTasks):
 
     session = chat_sessions[session_id]
     session.last_activity = time.time()
+    session.response_ready = False
 
     # Process query in background
-    background_tasks.add_task(process_chat_query, session_id, request.query)
+    background_tasks.add_task(
+        process_chat_query,
+        app,
+        session_id,
+        request.query,
+        request.language
+    )
 
     # Return immediate acknowledgment
     return {
@@ -188,6 +194,9 @@ async def poll_session(session_id: str):
 
     session = chat_sessions[session_id]
     with session.lock:
+        # Check if we have a new response ready
+        has_response = session.response_ready
+
         # Return the latest messages
         if len(session.messages) >= 2:
             last_user_msg = None
@@ -205,7 +214,7 @@ async def poll_session(session_id: str):
 
             return {
                 "session_id": session_id,
-                "has_response": True,
+                "has_response": has_response,
                 "user_message": last_user_msg,
                 "assistant_message": last_assistant_msg
             }

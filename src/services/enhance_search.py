@@ -1,7 +1,7 @@
-from database.postgres import PostgresDB
-from database.chroma import ChromaDB
-from .reranking import RerankerService
-from .vietnamese_llm_helper import VietnameseLLMHelper
+from src.database.postgres import PostgresDB
+from src.database.chroma import ChromaDB
+from src.services.reranking import RerankerService
+from src.services.vietnamese_llm_helper import VietnameseLLMHelper
 
 
 class EnhancedSearchService:

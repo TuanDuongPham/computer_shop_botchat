@@ -1,5 +1,5 @@
 from openai import OpenAI
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from src.config import OPENAI_API_KEY, OPENAI_MODEL
 import json
 import traceback
 
