@@ -36,11 +36,9 @@ class ProductAdvisorAgent:
         )
 
     async def search_products(self, query: str, language: str = "vi", n_results: int = 3):
-        """Search for products based on the query."""
         return self.search_service.search(query, language, n_results)
 
     async def handle_query(self, query: str, language: str = "vi"):
-        """Handle a product-related query from a user."""
         try:
             # Step 1: Search for products based on query
             search_results = await self.search_products(query, language, n_results=5)
@@ -50,26 +48,39 @@ class ProductAdvisorAgent:
 
             # Step 2: Format product results
             formatted_products = []
+            advised_products = []
 
             for i, doc in enumerate(search_results['documents'][0]):
                 if i >= len(search_results['metadatas'][0]):
                     break
 
                 metadata = search_results['metadatas'][0][i]
-                product_name = metadata.get('model', '')
-                product_brand = metadata.get('brand', '')
+                product_full_name = metadata.get('product_name', '')
+
+                if not product_full_name:
+                    product_brand = metadata.get('brand', '')
+                    product_model = metadata.get('model', '')
+                    product_full_name = f"{product_brand} {product_model}".strip(
+                    )
+
                 product_price = metadata.get('price', 0)
                 product_category = metadata.get('category', '')
 
-                # Extract basic specs from document
+                advised_products.append({
+                    "name": product_full_name,
+                    "price": float(product_price),
+                    "category": product_category,
+                    "quantity": 1
+                })
+
                 specs_text = doc.split("SPECIFICATIONS:")[
                     1].strip() if "SPECIFICATIONS:" in doc else ""
                 specs_lines = [line.strip()
                                for line in specs_text.split("\n") if line.strip()]
-                specs_summary = ". ".join(specs_lines[:5])  # Get first 5 specs
+                specs_summary = ". ".join(specs_lines[:5])
 
                 formatted_product = {
-                    "name": f"{product_brand} {product_name}",
+                    "name": product_full_name,
                     "category": product_category,
                     "price": product_price,
                     "specs_summary": specs_summary
@@ -77,13 +88,18 @@ class ProductAdvisorAgent:
 
                 formatted_products.append(formatted_product)
 
+            from src.agents.order_processor import OrderProcessorAgent
+            order_processor = OrderProcessorAgent()
+            order_processor.set_recently_advised_products(advised_products)
+
             # Step 3: Create a context for the LLM with product information
             products_context = ""
             for i, product in enumerate(formatted_products, 1):
+                from src.services.price_utils import format_price_usd_to_vnd
                 products_context += f"""
                 Sản phẩm {i}: {product['name']}
                 Danh mục: {product['category']}
-                Giá: {format(int(product['price']), ',')}đ
+                Giá: {format_price_usd_to_vnd(product['price'])}
                 Thông số chính: {product['specs_summary']}
                 ---
                 """

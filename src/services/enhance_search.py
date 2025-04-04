@@ -37,11 +37,16 @@ class EnhancedSearchService:
             deduped_results = self._deduplicate_products(
                 reranked_results, n_results)
 
-            return deduped_results
+            # Step 5: Format product names (brand + model)
+            formatted_results = self._format_product_names(deduped_results)
+
+            return formatted_results
 
         except Exception as e:
             print(f"Search error: {e}")
-            return self.chroma_db.search(query, n_results=n_results, filter_dict=filters)
+            base_results = self.chroma_db.search(
+                query, n_results=n_results, filter_dict=filters)
+            return self._format_product_names(base_results)
 
     def _deduplicate_products(self, results, n_results=5):
         if not results or 'metadatas' not in results or not results['metadatas'][0]:
@@ -76,6 +81,23 @@ class EnhancedSearchService:
                     break
 
         return deduped_results
+
+    def _format_product_names(self, results):
+        if not results or 'metadatas' not in results or not results['metadatas'][0]:
+            return results
+
+        for i, metadata in enumerate(results['metadatas'][0]):
+            brand = metadata.get('brand', '')
+            model = metadata.get('model', '')
+
+            if brand and model:
+                full_name = f"{brand} {model}"
+                metadata['product_name'] = full_name
+            else:
+                metadata['product_name'] = model if model else (
+                    brand if brand else "Unknown Product")
+
+        return results
 
     def close(self):
         self.postgres_db.close()

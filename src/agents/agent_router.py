@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from agents import Agent, OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 from src.config import OPENAI_API_KEY, OPENAI_MODEL
@@ -39,35 +39,7 @@ class AgentRouter:
             "general": "Chào hỏi và hỏi đáp chung"
         }
 
-        # self.keywords = {
-        #     "product_advisor": [
-        #         "cpu", "chip", "vi xử lý", "bộ xử lý", "core i", "intel", "amd", "ryzen", "xeon", "processor",
-        #         "gpu", "card đồ họa", "vga", "nvidia", "radeon", "rtx", "gtx",
-        #         "ram", "bộ nhớ", "memory", "ddr", "dimm",
-        #         "bo mạch chủ", "mainboard", "main", "bo mẹ", "mother board",
-        #         "ổ cứng", "ssd", "hdd", "nvme", "m.2", "sata",
-        #         "nguồn", "power supply", "psu",
-        #         "vỏ máy tính", "case", "thùng máy",
-        #         "tản nhiệt", "fan", "quạt", "cooling", "aio"
-        #     ],
-        #     "policy_advisor": [
-        #         "chính sách", "bảo hành", "warranty", "đổi trả", "hoàn tiền", "refund", "thanh toán",
-        #         "payment", "giao hàng", "shipping", "delivery", "trả góp", "installment", "bảo mật",
-        #         "quy định", "policy", "đổi", "trả", "hoàn", "vận chuyển"
-        #     ],
-        #     "pc_builder": [
-        #         "build pc", "xây dựng pc", "lắp máy tính", "cấu hình pc", "cấu hình máy tính",
-        #         "pc gaming", "pc đồ họa", "pc văn phòng", "build", "xây dựng cấu hình", "tư vấn cấu hình",
-        #         "lắp ráp pc", "xây cấu hình", "dựng cấu hình", "lắp pc", "build máy", "lắp máy", "xây pc",
-        #         "20 triệu", "25 triệu", "30 triệu", "15 triệu", "cấu hình", "lắp đặt pc"
-        #     ],
-        #     "order_processor": [
-        #         "đặt hàng", "mua hàng", "order", "thanh toán", "purchase", "đơn hàng", "invoice",
-        #         "mua", "đặt mua", "checkout", "giỏ hàng", "shopping cart", "đặt", "đơn đặt hàng",
-        #         "mua ngay", "đặt giao", "tôi muốn mua", "tôi muốn đặt", "mua sản phẩm", "đặt sản phẩm",
-        #         "gửi đến địa chỉ", "vận chuyển tới", "giao đến", "mua liền", "mua luôn"
-        #     ]
-        # }
+        self.recently_advised_products = []
 
         self.model_client = OpenAIChatCompletionsModel(
             model=OPENAI_MODEL,
@@ -126,72 +98,23 @@ class AgentRouter:
             """,
         )
 
-    # def _keyword_based_classification(self, user_query: str) -> Dict[str, Any]:
-    #     user_query_lower = user_query.lower()
+    def set_recently_advised_products(self, products: List[Dict[str, Any]]):
+        """Lưu trữ sản phẩm được tư vấn gần nhất."""
+        self.recently_advised_products = products
 
-    #     special_keywords = {
-    #         "chip": "product_advisor",
-    #         "chip intel": "product_advisor",
-    #         "chip amd": "product_advisor",
-    #         "intel": "product_advisor",
-    #         "core i": "product_advisor",
-    #         "ryzen": "product_advisor",
-    #         "xây dựng pc": "pc_builder",
-    #         "build pc": "pc_builder",
-    #         "build cấu hình": "pc_builder",
-    #         "đặt hàng": "order_processor",
-    #         "mua sản phẩm": "order_processor",
-    #         "chính sách bảo hành": "policy_advisor"
-    #     }
+        # Đồng bộ với OrderProcessor
+        from src.agents.order_processor import OrderProcessorAgent
+        order_processor = OrderProcessorAgent()
+        order_processor.set_recently_advised_products(products)
 
-    #     for keyword, intent in special_keywords.items():
-    #         if keyword in user_query_lower:
-    #             return {
-    #                 "intent": intent,
-    #                 "confidence": 0.95,
-    #                 "reasoning": f"Phát hiện từ khóa đặc biệt '{keyword}' trong truy vấn"
-    #             }
-
-    #     pc_builder_pattern = r"(xây dựng|build|lắp ráp|cấu hình).*?(pc|máy tính|cấu hình)"
-    #     if re.search(pc_builder_pattern, user_query_lower) or "triệu" in user_query_lower:
-    #         return {
-    #             "intent": "pc_builder",
-    #             "confidence": 0.9,
-    #             "reasoning": f"Phát hiện yêu cầu xây dựng PC trong truy vấn"
-    #         }
-
-    #     order_pattern = r"(mua|đặt|order).*?(hàng|sản phẩm)"
-    #     if re.search(order_pattern, user_query_lower):
-    #         return {
-    #             "intent": "order_processor",
-    #             "confidence": 0.9,
-    #             "reasoning": f"Phát hiện yêu cầu đặt hàng trong truy vấn"
-    #         }
-
-    #     for intent, keywords in self.keywords.items():
-    #         for keyword in keywords:
-    #             if keyword in user_query_lower:
-    #                 return {
-    #                     "intent": intent,
-    #                     "confidence": 0.85,
-    #                     "reasoning": f"Phát hiện từ khóa '{keyword}' thuộc loại {intent}"
-    #                 }
-
-    #     return None
+        print(f"AgentRouter: Đã lưu trữ sản phẩm tư vấn gần nhất: {products}")
 
     async def classify_intent(self, user_query: str) -> Dict[str, Any]:
-        # keyword_result = self._keyword_based_classification(user_query)
-        # if keyword_result:
-        #     print("intent_result (keyword-based)", keyword_result)
-        #     return keyword_result
-
         try:
             from agents import Runner
 
-            # Format the prompt message
             prompt = f"Phân loại đoạn text này: \"{user_query}\""
 
-            # Use the Runner to execute the agent
             response = await Runner.run(
                 self.intent_classifier,
                 [{"role": "system", "content": self.intent_classifier.instructions},
@@ -244,37 +167,10 @@ class AgentRouter:
             }
 
     async def route_query(self, user_query: str) -> str:
-        # user_query_lower = user_query.lower()
-
-        # if any(keyword in user_query_lower for keyword in self.keywords["pc_builder"]):
-        #     pc_builder_pattern = r"(xây dựng|cấu hình|build|lắp).*(pc|máy tính)"
-        #     if re.search(pc_builder_pattern, user_query_lower) or "triệu" in user_query_lower:
-        #         print(
-        #             f"Phân loại '{user_query}' là pc_builder dựa trên từ khóa")
-        #         return "pc_builder"
-
-        # if any(keyword in user_query_lower for keyword in ["chip", "intel", "core i", "amd", "ryzen", "cpu"]):
-        #     print(
-        #         f"Phân loại '{user_query}' là product_advisor dựa trên từ khóa CPU/chip")
-        #     return "product_advisor"
-
-        # order_pattern = r"(đặt|mua|order).*(hàng|sản phẩm)"
-        # if re.search(order_pattern, user_query_lower) or any(keyword in user_query_lower for keyword in ["muốn mua", "mua ngay", "đặt hàng"]):
-        #     print(
-        #         f"Phân loại '{user_query}' là order_processor dựa trên từ khóa")
-        #     return "order_processor"
-
-        # policy_pattern = r"(chính sách|bảo hành|đổi trả|hoàn tiền|thanh toán|giao hàng|vận chuyển)"
-        # if re.search(policy_pattern, user_query_lower):
-        #     print(
-        #         f"Phân loại '{user_query}' là policy_advisor dựa trên từ khóa")
-        #     return "policy_advisor"
-
-        # product_pattern = r"(card|ram|mainboard|cpu|gpu|vga|ổ cứng|nguồn|case|tản nhiệt)"
-        # if re.search(product_pattern, user_query_lower):
-        #     print(
-        #         f"Phân loại '{user_query}' là product_advisor dựa trên từ khóa")
-        #     return "product_advisor"
+        order_keywords = ["đặt hàng", "mua ngay", "order",
+                          "thanh toán", "mua", "đặt mua", "đặt"]
+        if any(keyword in user_query.lower() for keyword in order_keywords) and self.recently_advised_products:
+            return "order_processor"
 
         intent_result = await self.classify_intent(user_query)
         print("intent_result", intent_result)

@@ -175,7 +175,7 @@ class PCBuilderAgent:
             component_budget = budget * percentage
 
             purpose_query = " ".join([self.pc_purposes[p]
-                                     for p in purposes if p in self.pc_purposes])
+                                      for p in purposes if p in self.pc_purposes])
             query = f"{category} for {purpose_query}"
 
             search_results = await self.search_products_by_category(category, query, n_results=5)
@@ -195,14 +195,23 @@ class PCBuilderAgent:
                     break
 
                 metadata = search_results['metadatas'][0][i]
+                # Giá từ database là USD, giữ nguyên để tính toán
                 price = float(metadata.get('price', 0))
+
+                # Lấy tên đầy đủ của sản phẩm
+                product_full_name = metadata.get('product_name', '')
+                if not product_full_name:
+                    brand = metadata.get('brand', '')
+                    model = metadata.get('model', '')
+                    product_full_name = f"{brand} {model}".strip()
 
                 if price <= component_budget:
                     price_diff = component_budget - price
                     if price_diff < smallest_price_diff:
                         smallest_price_diff = price_diff
                         best_component = {
-                            "name": f"{metadata.get('brand', '')} {metadata.get('model', '')}",
+                            "name": product_full_name,
+                            "product_name": product_full_name,  # Lưu tên đầy đủ
                             "price": price,
                             "category": category,
                             "details": doc
@@ -214,10 +223,19 @@ class PCBuilderAgent:
 
                 for i, metadata in enumerate(search_results['metadatas'][0]):
                     price = float(metadata.get('price', 0))
+
+                    # Lấy tên đầy đủ của sản phẩm
+                    product_full_name = metadata.get('product_name', '')
+                    if not product_full_name:
+                        brand = metadata.get('brand', '')
+                        model = metadata.get('model', '')
+                        product_full_name = f"{brand} {model}".strip()
+
                     if price < cheapest_price:
                         cheapest_price = price
                         cheapest_component = {
-                            "name": f"{metadata.get('brand', '')} {metadata.get('model', '')}",
+                            "name": product_full_name,
+                            "product_name": product_full_name,  # Lưu tên đầy đủ
                             "price": price,
                             "category": category,
                             "details": search_results['documents'][0][i]
@@ -253,12 +271,30 @@ class PCBuilderAgent:
 
             # Bước 3: Chuẩn bị thông tin cho output
             config_details = ""
+
+            # Danh sách sản phẩm để lưu trữ
+            advised_products = []
+
             for category, component in pc_config["configs"].items():
-                component_price = "{:,.0f}".format(
-                    component["price"]).replace(",", ".")
+                # Import tiện ích xử lý giá
+                from src.services.price_utils import format_price_usd_to_vnd
+                component_price = format_price_usd_to_vnd(component["price"])
                 config_details += f"\n### {category}\n"
                 config_details += f"- {component['name']}\n"
-                config_details += f"- Giá: {component_price}đ\n"
+                config_details += f"- Giá: {component_price}\n"
+
+                # Đảm bảo tên sản phẩm là đầy đủ (sử dụng tên từ component)
+                product_name = component['name']
+                if 'product_name' in component:
+                    product_name = component['product_name']
+
+                # Thêm sản phẩm vào danh sách tư vấn
+                advised_products.append({
+                    "name": product_name,
+                    "price": component['price'],
+                    "category": category,
+                    "quantity": 1
+                })
 
                 if "details" in component:
                     specs_text = component["details"].split("SPECIFICATIONS:")[1].strip(
@@ -269,11 +305,17 @@ class PCBuilderAgent:
                         config_details += "- Thông số chính: " + \
                             "; ".join(specs_lines) + "\n"
 
-            total_cost = "{:,.0f}".format(
-                pc_config["total_cost"]).replace(",", ".")
+            # Import tiện ích xử lý giá
+            from src.services.price_utils import format_price_usd_to_vnd
+            total_cost = format_price_usd_to_vnd(pc_config["total_cost"])
 
             purpose_text = ", ".join([self.pc_purposes[p]
-                                     for p in purposes if p in self.pc_purposes])
+                                      for p in purposes if p in self.pc_purposes])
+
+            # Lưu trữ bộ sản phẩm đã tư vấn vào OrderProcessor
+            from src.agents.order_processor import OrderProcessorAgent
+            order_processor = OrderProcessorAgent()
+            order_processor.set_recently_advised_products(advised_products)
 
             # Bước 4: Chuẩn bị prompt cho phản hồi
             prompt = f"""

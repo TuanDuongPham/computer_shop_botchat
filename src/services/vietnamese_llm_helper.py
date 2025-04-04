@@ -118,19 +118,16 @@ class VietnameseLLMHelper:
         self.model = model
 
     def enhance_vietnamese_query(self, query):
-        # Chuẩn bị từ điển danh mục để đưa vào prompt
         category_mappings = ""
         for english_term, vietnamese_terms in CATEGORY_TRANSLATIONS.items():
             vietnamese_list = ", ".join(vietnamese_terms)
             category_mappings += f"- {english_term}: {vietnamese_list}\n"
 
-        # Chuẩn bị từ điển thương hiệu để đưa vào prompt
         brand_mappings = ""
         for category, brands in COMMON_BRANDS.items():
             brand_list = ", ".join(brands)
             brand_mappings += f"- {category}: {brand_list}\n"
 
-        # Chuẩn bị từ điển thông số kỹ thuật để đưa vào prompt
         spec_mappings_text = ""
         for category, specs in SPEC_MAPPINGS.items():
             spec_mappings_text += f"\n{category}:\n"
@@ -159,9 +156,10 @@ class VietnameseLLMHelper:
             1. Phân tích truy vấn để xác định người dùng đang tìm kiếm danh mục sản phẩm nào
             2. Thêm các thuật ngữ tiếng Anh tương ứng từ danh sách DANH MỤC SẢN PHẨM
             3. Xác định các thông số kỹ thuật được đề cập trong truy vấn và thêm các thuật ngữ tiếng Anh tương ứng từ danh sách THÔNG SỐ KỸ THUẬT
-            4. Nếu truy vấn chứa giá tiền, hãy chuyển đổi nó thành USD (1 triệu VND = 40 USD)
-            5. Nếu truy vấn chứa từ "chip", bạn phải nhận diện đó là đang nói đến "CPU" hoặc "processor"
-            6. Chỉ trả về truy vấn đã được nâng cao mà KHÔNG có bất kỳ giải thích nào, chỉ trả về văn bản truy vấn
+            4. Nếu truy vấn chứa giá tiền bằng VND (như "dưới 5 triệu", "10-15 triệu"), hãy chuyển đổi thành USD (1 triệu VND = 40 USD)
+            5. Ví dụ: "dưới 5 triệu VND" -> "under 200 USD"; "10-15 triệu" -> "400-600 USD"
+            6. Nếu truy vấn chứa từ "chip", bạn phải nhận diện đó là đang nói đến "CPU" hoặc "processor"
+            7. Chỉ trả về truy vấn đã được nâng cao mà KHÔNG có bất kỳ giải thích nào, chỉ trả về văn bản truy vấn
 
             Ví dụ 1:
             Cho "tản nhiệt nước cho CPU Intel socket LGA1700" bạn có thể trả về:
@@ -182,6 +180,10 @@ class VietnameseLLMHelper:
             Ví dụ 5:
             Cho "cần card đồ họa chơi game tốt dưới 5 triệu" bạn có thể trả về:
             "Graphics Card gaming performance budget affordable below 200 USD"
+
+            Ví dụ 6:
+            Cho "CPU giá từ 10 đến 15 triệu có hiệu năng tốt nhất" bạn có thể trả về:
+            "CPU processor high performance price range 400-600 USD best value"
             """
 
         try:
@@ -193,7 +195,6 @@ class VietnameseLLMHelper:
             )
 
             enhanced_query = response.choices[0].message.content.strip()
-            print(f"Enhanced query: \"{enhanced_query}\"")
             return enhanced_query
 
         except Exception as e:

@@ -107,6 +107,10 @@ async def process_query(query, language="vi"):
 
         response = await agent_instance.handle_query(query, language)
 
+        if agent_type in ["product_advisor", "pc_builder"] and hasattr(agent_instance, "recently_advised_products"):
+            st.session_state.agent_router.set_recently_advised_products(
+                agent_instance.recently_advised_products)
+
         if isinstance(response, dict) and "show_order_form" in response:
             st.session_state.pending_order_products = response.get(
                 "products", [])
@@ -302,7 +306,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Debug information
     with st.expander("Thông tin Debug"):
         st.caption(f"Session ID: {st.session_state.session_id}")
         st.caption(
@@ -314,7 +317,6 @@ with st.sidebar:
             initialize_agents()
             st.success("Đã khởi động lại các agents thành công!")
 
-    # Button to clear chat
     if st.button("Xóa cuộc trò chuyện"):
         st.session_state.messages = []
         st.rerun()
