@@ -105,7 +105,6 @@ class RerankerService:
                     valid_items = sorted(
                         valid_items, key=lambda x: x.get("score", 0), reverse=True)
 
-                # Lấy ra các id
                 reranked_ids = [item["id"] for item in valid_items[:n_results]]
 
             except (json.JSONDecodeError, AttributeError, KeyError, TypeError) as e:

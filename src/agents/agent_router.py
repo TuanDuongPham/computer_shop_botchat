@@ -185,7 +185,11 @@ class AgentRouter:
             try:
                 from src.agents.order_processor import OrderProcessorAgent
                 order_processor = OrderProcessorAgent()
-                is_ordering_pc, confidence, reasoning, is_mentioned, mentioned_part = await order_processor.detect_advised_pc_intent(user_query)
+                result = await order_processor.detect_advised_pc_intent(user_query)
+                if len(result) == 5:
+                    is_ordering_pc, confidence, reasoning, is_mentioned, mentioned_part = result
+                else:
+                    is_ordering_pc, confidence, reasoning = result
 
                 if is_ordering_pc and confidence >= 0.7:
                     print(
