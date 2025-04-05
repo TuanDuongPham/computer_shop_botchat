@@ -57,11 +57,9 @@ class PolicyAdvisorAgent:
             formatted_policy = await self.format_policy_response(search_results)
 
             # Step 3: Combine the policy information with enhanced content
-            # Get original query and enhanced query for context
             original_query = search_results.get('original_query', query)
             enhanced_query = search_results.get('enhanced_query', query)
 
-            # Extract top policy sections
             policy_sections = []
             if search_results and search_results.get('results') and search_results['results'].get('metadatas'):
                 for metadata in search_results['results']['metadatas'][0]:
@@ -73,7 +71,6 @@ class PolicyAdvisorAgent:
                         if section not in policy_sections:
                             policy_sections.append(section)
 
-            # Create paths for guidance
             policy_paths = []
             for section in policy_sections:
                 if section.get('path'):

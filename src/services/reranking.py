@@ -65,12 +65,9 @@ class RerankerService:
                 response_format={"type": "json_object"}
             )
 
-            # Xử lý kết quả trả về từ API
             result_json = response.choices[0].message.content
             try:
                 rerank_result = json.loads(result_json)
-
-                # Kiểm tra kết quả và lấy ra rankings
                 reranked_items = None
 
                 # Nếu đã có rankings trong kết quả
@@ -116,7 +113,6 @@ class RerankerService:
                 print(f"Raw response: {result_json}")
                 return search_results
 
-            # Map reranked IDs back to original content
             reranked_results = {
                 "ids": [[]],
                 "documents": [[]],
@@ -124,7 +120,6 @@ class RerankerService:
                 "distances": [[]]
             }
 
-            # Map reranked IDs back to original content
             id_to_index = {id: i for i, id in enumerate(ids)}
 
             for id in reranked_ids:

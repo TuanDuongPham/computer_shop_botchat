@@ -40,7 +40,6 @@ class AgentRouter:
             "general": "Chào hỏi và hỏi đáp chung"
         }
 
-        # Sử dụng shared state service
         self.shared_state = SharedStateService()
 
         self.model_client = OpenAIChatCompletionsModel(
@@ -101,7 +100,6 @@ class AgentRouter:
         )
 
     def set_recently_advised_products(self, products: List[Dict[str, Any]]):
-        """Lưu trữ sản phẩm được tư vấn gần nhất."""
         self.shared_state.set_recently_advised_products(products)
         print(f"AgentRouter: Đã lưu trữ sản phẩm tư vấn gần nhất qua SharedStateService")
 
@@ -133,7 +131,6 @@ class AgentRouter:
 
                     return result
                 except json.JSONDecodeError as e:
-                    # In ra lỗi và chuỗi JSON để debug
                     print(
                         f"JSON decode error: {e}, extracted JSON: '{json_text}'")
                     print(f"Full response: '{response_text}'")
@@ -163,40 +160,32 @@ class AgentRouter:
             }
 
     async def route_query(self, user_query: str) -> str:
-        # Kiểm tra từ khóa liên quan đến đặt hàng cấu hình vừa tư vấn
         order_keywords = ["đặt hàng", "mua ngay", "order", "thanh toán", "mua", "đặt", "lấy",
                           "chốt đơn", "xác nhận", "đồng ý", "ok", "được", "chốt"]
         config_keywords = ["cấu hình", "pc", "máy tính", "bộ máy", "như trên", "vừa rồi",
                            "vừa tư vấn", "bộ này", "cái này", "cái đó", "như vậy", "như thế"]
 
-        # Lấy sản phẩm đã tư vấn từ shared state
         recently_advised_products = self.shared_state.get_recently_advised_products()
         recently_advised_pc = self.shared_state.is_recently_advised_pc()
 
-        # Nếu query là câu đơn giản (dưới 5 từ) và có chứa từ khóa đặt hàng
         if len(user_query.split()) <= 5 and any(keyword in user_query.lower() for keyword in order_keywords):
-            # Nếu có sản phẩm đã tư vấn gần nhất, chuyển ngay đến order_processor
             if recently_advised_products:
                 print(
                     "Phát hiện câu đơn giản về đặt hàng, chuyển hướng đến order_processor")
                 return "order_processor"
 
-        # Nếu query có từ khóa đặt hàng và liên quan đến cấu hình
         if (any(keyword in user_query.lower() for keyword in order_keywords) and
                 any(keyword in user_query.lower() for keyword in config_keywords)):
-            # Nếu có sản phẩm đã tư vấn gần nhất, chuyển ngay đến order_processor
             if recently_advised_products:
                 print(
                     "Phát hiện ý định đặt hàng cấu hình, chuyển hướng đến order_processor")
                 return "order_processor"
 
-        # Trước khi gọi intent classifier, kiểm tra bằng LLM xem có phải ý định đặt hàng không
         if recently_advised_products:
             try:
-                # Tạm thời import OrderProcessorAgent ở đây để tránh circular import
                 from src.agents.order_processor import OrderProcessorAgent
                 order_processor = OrderProcessorAgent()
-                is_ordering_pc, confidence, reasoning = await order_processor.detect_advised_pc_intent(user_query)
+                is_ordering_pc, confidence, reasoning, is_mentioned, mentioned_part = await order_processor.detect_advised_pc_intent(user_query)
 
                 if is_ordering_pc and confidence >= 0.7:
                     print(
@@ -205,7 +194,6 @@ class AgentRouter:
             except Exception as e:
                 print(f"Lỗi khi phát hiện ý định đặt hàng: {e}")
 
-        # Nếu có từ khóa đặt hàng và đã có sản phẩm tư vấn gần đây
         if any(keyword in user_query.lower() for keyword in order_keywords) and recently_advised_products:
             print("Phát hiện từ khóa đặt hàng khi có sản phẩm tư vấn gần đây")
             return "order_processor"

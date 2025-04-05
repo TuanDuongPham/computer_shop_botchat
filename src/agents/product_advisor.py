@@ -90,7 +90,6 @@ class ProductAdvisorAgent:
 
                 formatted_products.append(formatted_product)
 
-            # Lưu sản phẩm đã tư vấn vào shared state
             self.shared_state.set_recently_advised_products(advised_products)
 
             # Step 3: Create a context for the LLM with product information

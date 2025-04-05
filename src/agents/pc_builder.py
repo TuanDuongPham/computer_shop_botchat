@@ -126,20 +126,16 @@ class PCBuilderAgent:
             return ["general"]
 
     async def search_components(self, category, search_query, budget_hint=None, n_results=3):
-        """Tìm kiếm linh kiện từ database dựa trên danh mục và truy vấn tìm kiếm."""
         try:
             filter_dict = {"category": category}
 
-            # Thêm gợi ý về ngân sách vào truy vấn nếu có
             if budget_hint:
                 from src.services.price_utils import convert_usd_to_vnd
-                # Chuyển đổi ngân sách từ VND sang USD (vì giá trong database lưu bằng USD)
-                budget_usd = budget_hint / 25000  # Tỷ giá ước tính
+                budget_usd = budget_hint / 25000
                 enhanced_query = f"{search_query} price range {budget_usd}"
             else:
                 enhanced_query = search_query
 
-            # Tìm kiếm trong database
             search_results = self.search_service.search(
                 enhanced_query,
                 language="vi",
@@ -147,7 +143,6 @@ class PCBuilderAgent:
                 filters=filter_dict
             )
 
-            # Định dạng kết quả trả về
             formatted_results = []
             if search_results and 'documents' in search_results and search_results['documents'][0]:
                 for i, doc in enumerate(search_results['documents'][0]):
@@ -164,7 +159,6 @@ class PCBuilderAgent:
 
                     price = float(metadata.get('price', 0))
 
-                    # Trích xuất thông số kỹ thuật
                     specs_text = ""
                     if "SPECIFICATIONS:" in doc:
                         specs_text = doc.split("SPECIFICATIONS:")[1].strip()
@@ -183,25 +177,20 @@ class PCBuilderAgent:
 
     async def handle_query(self, query: str, language: str = "vi"):
         try:
-            # Trích xuất thông tin từ yêu cầu của khách hàng
             budget = self._extract_budget(query)
             purposes = self._extract_purpose(query)
 
-            # Xử lý ngân sách mặc định nếu không có
             if not budget:
                 budget = 20000000  # 20 triệu VND mặc định
                 budget_text = "không đề cập cụ thể"
             else:
                 budget_text = f"{budget:,}đ".replace(",", ".")
 
-            # Xử lý mục đích sử dụng
             purpose_text = ", ".join([self.pc_purposes[p]
                                       for p in purposes if p in self.pc_purposes])
 
-            # Chuẩn bị enhanced query từ yêu cầu của khách hàng
             enhanced_query = self.vi_helper.enhance_vietnamese_query(query)
 
-            # Chuẩn bị prompt để LLM tìm kiếm và tư vấn cấu hình PC
             prompt = f"""
             Bạn là chuyên gia tư vấn cấu hình PC tại cửa hàng TechPlus. Một khách hàng đã yêu cầu: "{query}"
             
@@ -244,50 +233,42 @@ class PCBuilderAgent:
             Hãy đảm bảo rằng mỗi thành phần đều có đầy đủ các thông tin trên theo đúng định dạng này.
             """
 
-            # Chuẩn bị danh sách để lưu thông tin cấu hình
             pc_components = []
 
-            # Tìm kiếm thông tin từng loại linh kiện
             component_categories = [
                 "CPU", "Motherboard", "RAM", "GPU", "Storage", "PSU", "Case", "Cooling"]
 
-            # Tạo cấu trúc đầu vào cho LLM với các kết quả tìm kiếm
             component_searches = {}
 
-            # Thực hiện tìm kiếm song song cho tất cả các danh mục
             for category in component_categories:
-                # Tạo truy vấn tìm kiếm dựa trên danh mục và mục đích sử dụng
                 purpose_keywords = " ".join(
                     [self.pc_purposes[p] for p in purposes if p in self.pc_purposes])
                 search_query = f"{category} for {purpose_keywords}"
 
-                # Tính toán ngân sách tương đối cho từng loại linh kiện
                 category_budget = None
                 if budget:
                     if category == "CPU":
-                        category_budget = budget * 0.2  # ~20% ngân sách
+                        category_budget = budget * 0.2
                     elif category == "GPU" and "gaming" in purposes:
-                        category_budget = budget * 0.3  # ~30% ngân sách cho gaming
+                        category_budget = budget * 0.3
                     elif category == "GPU":
-                        category_budget = budget * 0.25  # ~25% cho mục đích khác
+                        category_budget = budget * 0.25
                     elif category == "RAM":
-                        category_budget = budget * 0.15  # ~15% ngân sách
+                        category_budget = budget * 0.15
                     elif category == "Motherboard":
-                        category_budget = budget * 0.15  # ~15% ngân sách
+                        category_budget = budget * 0.15
                     elif category == "Storage":
-                        category_budget = budget * 0.1  # ~10% ngân sách
+                        category_budget = budget * 0.1
                     elif category == "PSU":
-                        category_budget = budget * 0.08  # ~8% ngân sách
+                        category_budget = budget * 0.08
                     elif category == "Case":
-                        category_budget = budget * 0.05  # ~5% ngân sách
+                        category_budget = budget * 0.05
                     elif category == "Cooling":
-                        category_budget = budget * 0.02  # ~2% ngân sách
+                        category_budget = budget * 0.02
 
-                # Tìm kiếm các linh kiện phù hợp
                 components = await self.search_components(category, search_query, category_budget, n_results=3)
                 component_searches[category] = components
 
-            # Bổ sung thông tin tìm kiếm vào prompt
             prompt += "\n\nKết quả tìm kiếm trong cơ sở dữ liệu của chúng ta:\n"
 
             for category, components in component_searches.items():
@@ -298,7 +279,6 @@ class PCBuilderAgent:
                         from src.services.price_utils import format_price_usd_to_vnd
                         price_vnd = format_price_usd_to_vnd(comp['price'])
 
-                        # Trích xuất các thông số kỹ thuật quan trọng
                         details = comp['details']
                         if len(details) > 200:
                             details = details[:200] + "..."
@@ -307,7 +287,6 @@ class PCBuilderAgent:
                 else:
                     prompt += "Không tìm thấy sản phẩm phù hợp.\n"
 
-            # Thêm hướng dẫn cuối cùng
             prompt += """
             Dựa trên các kết quả tìm kiếm trên, hãy xây dựng một cấu hình PC hoàn chỉnh và tối ưu. 
             Nếu một số linh kiện không có kết quả tìm kiếm, hãy đề xuất thông tin chung.
@@ -319,7 +298,6 @@ class PCBuilderAgent:
             và giá sản phẩm dạng "- Giá: XXX.XXXđ" trên dòng tiếp theo.
             """
 
-            # Gọi LLM để xử lý yêu cầu
             response = await Runner.run(
                 self.agent,
                 [
@@ -329,31 +307,20 @@ class PCBuilderAgent:
             )
 
             final_response = response.final_output
-
-            # Cải thiện phương pháp trích xuất sản phẩm từ phản hồi
             advised_products = []
-
-            # Sử dụng regex để tìm các phần thông tin sản phẩm
-            import re
-
-            # Pattern để tìm các section
             section_pattern = r'### (CPU|Motherboard|RAM|GPU|Storage|PSU|Case|Cooling)[\s\S]*?(?=### |\Z)'
             sections = re.findall(section_pattern, final_response)
 
-            # Trích xuất thông tin từng sản phẩm
             for category in component_categories:
-                # Tìm section cho category hiện tại
                 section_match = re.search(
                     f'### {category}([\s\S]*?)(?=### |\Z)', final_response)
                 if section_match:
                     section_text = section_match.group(1).strip()
 
-                    # Lấy dòng đầu tiên làm tên sản phẩm
                     lines = section_text.split('\n')
                     if lines:
                         product_name = lines[0].strip()
 
-                        # Tìm giá sản phẩm
                         price_match = re.search(
                             r'[Gg]iá:?\s*(\d{1,3}(?:\.\d{3})*(?:\,\d+)?)\s*(?:đ|₫|VND)', section_text)
                         product_price = 0
@@ -361,7 +328,6 @@ class PCBuilderAgent:
                         if price_match:
                             price_str = price_match.group(1).replace(".", "")
                             try:
-                                # Chuyển đổi giá từ VND sang USD
                                 from src.services.price_utils import parse_usd_from_vnd
                                 product_price = float(price_str)
                                 product_price = parse_usd_from_vnd(
@@ -369,7 +335,6 @@ class PCBuilderAgent:
                             except:
                                 product_price = 0
 
-                        # Thêm sản phẩm vào danh sách (nếu có tên)
                         if product_name and not product_name.startswith('-') and not product_name.startswith('*'):
                             advised_products.append({
                                 "name": product_name,
@@ -378,13 +343,11 @@ class PCBuilderAgent:
                                 "quantity": 1
                             })
 
-            # In thông tin debug
             print(f"Số lượng sản phẩm đã trích xuất: {len(advised_products)}")
             for product in advised_products:
                 print(
                     f"- {product['category']}: {product['name']} - ${product['price']}")
 
-            # Lưu sản phẩm đã tư vấn vào shared state
             if advised_products:
                 self.shared_state.set_recently_advised_products(
                     advised_products)
