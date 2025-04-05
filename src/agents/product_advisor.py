@@ -1,6 +1,7 @@
 from src.database.chroma import ChromaDB
 from src.services.enhance_search import EnhancedSearchService
 from src.services.vietnamese_llm_helper import VietnameseLLMHelper
+from src.services.shared_state import SharedStateService
 from agents import Agent, Runner, FunctionTool, OpenAIChatCompletionsModel, function_tool
 from openai import AsyncOpenAI
 from src.config import OPENAI_MODEL, OPENAI_API_KEY
@@ -10,6 +11,7 @@ class ProductAdvisorAgent:
     def __init__(self):
         self.vi_helper = VietnameseLLMHelper()
         self.search_service = EnhancedSearchService()
+        self.shared_state = SharedStateService()
         self.model_client = OpenAIChatCompletionsModel(
             model=OPENAI_MODEL,
             openai_client=AsyncOpenAI(api_key=OPENAI_API_KEY)
@@ -88,9 +90,8 @@ class ProductAdvisorAgent:
 
                 formatted_products.append(formatted_product)
 
-            from src.agents.order_processor import OrderProcessorAgent
-            order_processor = OrderProcessorAgent()
-            order_processor.set_recently_advised_products(advised_products)
+            # Lưu sản phẩm đã tư vấn vào shared state
+            self.shared_state.set_recently_advised_products(advised_products)
 
             # Step 3: Create a context for the LLM with product information
             products_context = ""

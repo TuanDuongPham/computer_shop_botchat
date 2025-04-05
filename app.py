@@ -36,6 +36,9 @@ if "agent_router" not in st.session_state:
 if "agents" not in st.session_state:
     st.session_state.agents = {}
 
+if "advised_products" not in st.session_state:
+    st.session_state.advised_products = []
+
 if "default_agent" not in st.session_state:
     st.session_state.default_agent = None
 

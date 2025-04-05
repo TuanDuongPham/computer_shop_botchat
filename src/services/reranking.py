@@ -50,7 +50,7 @@ class RerankerService:
             Return a JSON object with a "rankings" array containing reranked IDs and scores:
             {{
             "rankings": [
-                {{"id": "item_id", "score": score}},
+                {{"id": "item_id", "score": 10}},
                 ...
             ]
             }}
@@ -65,38 +65,58 @@ class RerankerService:
                 response_format={"type": "json_object"}
             )
 
+            # Xử lý kết quả trả về từ API
             result_json = response.choices[0].message.content
-            rerank_result = json.loads(result_json)
-            reranked_items = None
-            if isinstance(rerank_result, dict):
-                for key in rerank_result:
-                    if isinstance(rerank_result[key], list) and len(rerank_result[key]) > 0:
-                        reranked_items = rerank_result[key]
-                        break
+            try:
+                rerank_result = json.loads(result_json)
 
-                if reranked_items is None and "rankings" in rerank_result:
+                # Kiểm tra kết quả và lấy ra rankings
+                reranked_items = None
+
+                # Nếu đã có rankings trong kết quả
+                if isinstance(rerank_result, dict) and "rankings" in rerank_result:
                     reranked_items = rerank_result["rankings"]
-            elif isinstance(rerank_result, list):
-                reranked_items = rerank_result
 
-            if not reranked_items:
-                print(f"Could not extract rankings from: {rerank_result}")
+                # Nếu không có rankings nhưng có một key khác chứa list
+                elif isinstance(rerank_result, dict):
+                    for key in rerank_result:
+                        if isinstance(rerank_result[key], list) and len(rerank_result[key]) > 0:
+                            reranked_items = rerank_result[key]
+                            break
+
+                # Nếu kết quả trực tiếp là một list
+                elif isinstance(rerank_result, list):
+                    reranked_items = rerank_result
+
+                # Đảm bảo reranked_items không phải là None và là một danh sách
+                if not reranked_items or not isinstance(reranked_items, list):
+                    print(f"Invalid reranking format, using original results")
+                    return search_results
+
+                # Đảm bảo các phần tử trong danh sách đều là dict và có id
+                valid_items = []
+                for item in reranked_items:
+                    if isinstance(item, dict) and "id" in item:
+                        valid_items.append(item)
+
+                if not valid_items:
+                    print("No valid items found in reranking result")
+                    return search_results
+
+                # Sắp xếp theo score nếu có
+                if all(isinstance(item, dict) and 'score' in item for item in valid_items):
+                    valid_items = sorted(
+                        valid_items, key=lambda x: x.get("score", 0), reverse=True)
+
+                # Lấy ra các id
+                reranked_ids = [item["id"] for item in valid_items[:n_results]]
+
+            except (json.JSONDecodeError, AttributeError, KeyError, TypeError) as e:
+                print(f"Error processing reranking result: {e}")
+                print(f"Raw response: {result_json}")
                 return search_results
 
-            # Sort by score if available
-            if all('score' in item for item in reranked_items):
-                reranked_items = sorted(
-                    reranked_items, key=lambda x: x.get("score", 0), reverse=True)
-
-            reranked_ids = []
-            for item in reranked_items[:n_results]:
-                if isinstance(item, dict) and "id" in item:
-                    reranked_ids.append(item["id"])
-
-            if not reranked_ids:
-                print("No valid IDs found in reranking result")
-                return search_results
-
+            # Map reranked IDs back to original content
             reranked_results = {
                 "ids": [[]],
                 "documents": [[]],
@@ -122,5 +142,4 @@ class RerankerService:
         except Exception as e:
             print(f"Reranking failed: {e}")
             traceback.print_exc()
-
             return search_results
