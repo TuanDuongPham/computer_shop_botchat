@@ -196,7 +196,7 @@ class PCBuilderAgent:
 
             # Xử lý mục đích sử dụng
             purpose_text = ", ".join([self.pc_purposes[p]
-                                     for p in purposes if p in self.pc_purposes])
+                                      for p in purposes if p in self.pc_purposes])
 
             # Chuẩn bị enhanced query từ yêu cầu của khách hàng
             enhanced_query = self.vi_helper.enhance_vietnamese_query(query)
@@ -235,10 +235,13 @@ class PCBuilderAgent:
             - Ưu tiên các sản phẩm trong tầm giá và hiệu năng hợp lý
             - Tổng chi phí không nên vượt quá ngân sách của khách hàng, hoặc chỉ vượt một chút nếu thực sự cần thiết
             
-            Hãy đưa ra lời khuyên chi tiết và chuyên nghiệp, theo cấu trúc:
-            1. Tóm tắt nhu cầu và đề xuất tổng thể
-            2. Chi tiết về từng linh kiện đề xuất
-            3. Tổng chi phí và lời khuyên cuối cùng
+            Quan trọng: Hãy FORMAT câu trả lời theo cấu trúc sau để dễ dàng trích xuất thông tin:
+            - Đối với mỗi thành phần, hãy sử dụng tiêu đề "### [Tên thành phần]" (ví dụ: "### CPU")
+            - Sau tiêu đề, đặt tên đầy đủ của sản phẩm được đề xuất trên một dòng riêng (ví dụ: "Intel Core i5-13600K")
+            - Đặt giá của sản phẩm ở dạng "- Giá: XXX.XXXđ" trên một dòng riêng
+            - Sau đó là phần giải thích và lý do chọn sản phẩm
+            
+            Hãy đảm bảo rằng mỗi thành phần đều có đầy đủ các thông tin trên theo đúng định dạng này.
             """
 
             # Chuẩn bị danh sách để lưu thông tin cấu hình
@@ -311,6 +314,9 @@ class PCBuilderAgent:
             
             Hãy sử dụng các kết quả tìm kiếm này để đề xuất cấu hình tốt nhất phù hợp với nhu cầu của khách hàng.
             Đưa ra đề xuất cuối cùng với danh sách đầy đủ các linh kiện, giá tiền, và tổng chi phí.
+            
+            Nhớ rằng, mỗi thành phần phải có tiêu đề dạng "### [Tên thành phần]", sau đó là tên sản phẩm trên một dòng riêng, 
+            và giá sản phẩm dạng "- Giá: XXX.XXXđ" trên dòng tiếp theo.
             """
 
             # Gọi LLM để xử lý yêu cầu
@@ -324,54 +330,36 @@ class PCBuilderAgent:
 
             final_response = response.final_output
 
-            # Trích xuất các sản phẩm được đề xuất từ phản hồi của LLM
+            # Cải thiện phương pháp trích xuất sản phẩm từ phản hồi
             advised_products = []
 
+            # Sử dụng regex để tìm các phần thông tin sản phẩm
+            import re
+
+            # Pattern để tìm các section
+            section_pattern = r'### (CPU|Motherboard|RAM|GPU|Storage|PSU|Case|Cooling)[\s\S]*?(?=### |\Z)'
+            sections = re.findall(section_pattern, final_response)
+
+            # Trích xuất thông tin từng sản phẩm
             for category in component_categories:
-                # Tìm đoạn văn bản đề cập đến category trong phản hồi
-                category_pattern = fr"(?i)((?:### )?)({category}|{self.translate_category(category)})[^\n]*\n"
-                match = re.search(category_pattern, final_response)
+                # Tìm section cho category hiện tại
+                section_match = re.search(
+                    f'### {category}([\s\S]*?)(?=### |\Z)', final_response)
+                if section_match:
+                    section_text = section_match.group(1).strip()
 
-                if match:
-                    # Tìm tên sản phẩm và giá tiền trong đoạn văn bản sau category
-                    section_start = match.end()
-                    section_end = final_response.find("###", section_start)
-                    if section_end == -1:
-                        section_end = len(final_response)
+                    # Lấy dòng đầu tiên làm tên sản phẩm
+                    lines = section_text.split('\n')
+                    if lines:
+                        product_name = lines[0].strip()
 
-                    section_text = final_response[section_start:section_end]
-
-                    # Tìm tên sản phẩm và giá tiền
-                    # Tìm dòng đầu tiên không bắt đầu bằng dấu "-"
-                    product_line = ""
-                    for line in section_text.split("\n"):
-                        line = line.strip()
-                        if line and not line.startswith("-") and not line.startswith("*"):
-                            product_line = line
-                            break
-
-                    # Nếu không tìm thấy, lấy dòng đầu tiên có chứa tên hãng hoặc mã sản phẩm
-                    if not product_line:
-                        brands = ["Intel", "AMD", "NVIDIA", "ASUS", "MSI", "Gigabyte", "ASRock",
-                                  "Corsair", "Kingston", "G.Skill", "Crucial", "Samsung", "Western Digital",
-                                  "Seagate", "Cooler Master", "NZXT", "Thermaltake"]
-                        for line in section_text.split("\n"):
-                            line = line.strip()
-                            if any(brand in line for brand in brands):
-                                product_line = line
-                                break
-
-                    # Nếu tìm thấy tên sản phẩm
-                    if product_line:
-                        # Tìm giá trong dòng (nếu có)
+                        # Tìm giá sản phẩm
                         price_match = re.search(
-                            r'(\d{1,3}(?:\.\d{3})*(?:\,\d+)?)(?:đ|₫|VND|\.000đ)', product_line)
+                            r'[Gg]iá:?\s*(\d{1,3}(?:\.\d{3})*(?:\,\d+)?)\s*(?:đ|₫|VND)', section_text)
                         product_price = 0
 
                         if price_match:
-                            price_str = price_match.group(1)
-                            # Chuyển định dạng số VN (1.234.567) sang số thông thường
-                            price_str = price_str.replace(".", "")
+                            price_str = price_match.group(1).replace(".", "")
                             try:
                                 # Chuyển đổi giá từ VND sang USD
                                 from src.services.price_utils import parse_usd_from_vnd
@@ -381,50 +369,27 @@ class PCBuilderAgent:
                             except:
                                 product_price = 0
 
-                            # Loại bỏ phần giá từ tên sản phẩm
-                            product_name = product_line.split(
-                                price_match.group(0))[0].strip()
-                        else:
-                            product_name = product_line.strip()
+                        # Thêm sản phẩm vào danh sách (nếu có tên)
+                        if product_name and not product_name.startswith('-') and not product_name.startswith('*'):
+                            advised_products.append({
+                                "name": product_name,
+                                "price": product_price,
+                                "category": category,
+                                "quantity": 1
+                            })
 
-                            # Tìm giá ở dòng khác nếu không tìm thấy trong dòng sản phẩm
-                            for line in section_text.split("\n"):
-                                price_match = re.search(
-                                    r'[Gg]iá:?\s*(\d{1,3}(?:\.\d{3})*(?:\,\d+)?)\s*(?:đ|₫|VND|\.000đ)', line)
-                                if price_match:
-                                    price_str = price_match.group(
-                                        1).replace(".", "")
-                                    try:
-                                        from src.services.price_utils import parse_usd_from_vnd
-                                        product_price = float(price_str)
-                                        product_price = parse_usd_from_vnd(
-                                            product_price)
-                                    except:
-                                        pass
-                                    break
-
-                        # Nếu tên sản phẩm quá dài, cắt bớt
-                        if len(product_name) > 80:
-                            product_name = product_name[:80]
-
-                        # Nếu tên sản phẩm chứa dấu "-" và giá tiền, cắt bỏ phần giá
-                        if " - " in product_name:
-                            parts = product_name.split(" - ")
-                            if any(part.isdigit() or "₫" in part or "đ" in part for part in parts):
-                                product_name = parts[0].strip()
-
-                        # Thêm sản phẩm vào danh sách
-                        advised_products.append({
-                            "name": product_name,
-                            "price": product_price,
-                            "category": category,
-                            "quantity": 1
-                        })
+            # In thông tin debug
+            print(f"Số lượng sản phẩm đã trích xuất: {len(advised_products)}")
+            for product in advised_products:
+                print(
+                    f"- {product['category']}: {product['name']} - ${product['price']}")
 
             # Lưu sản phẩm đã tư vấn vào shared state
             if advised_products:
                 self.shared_state.set_recently_advised_products(
                     advised_products)
+                print(
+                    f"Đã lưu {len(advised_products)} sản phẩm vào shared state")
 
             return final_response
 
@@ -433,17 +398,3 @@ class PCBuilderAgent:
             import traceback
             traceback.print_exc()
             return f"Xin lỗi, tôi đang gặp sự cố khi xây dựng cấu hình PC. Vui lòng thử lại với yêu cầu rõ ràng hơn về ngân sách và mục đích sử dụng, ví dụ: 'Xây dựng PC gaming 25 triệu' hoặc 'PC đồ họa 30tr'."
-
-    def translate_category(self, category):
-        """Chuyển đổi tên danh mục tiếng Anh sang tiếng Việt."""
-        translations = {
-            "CPU": "Bộ xử lý|Vi xử lý|Chip",
-            "Motherboard": "Bo mạch chủ|Mainboard|Main",
-            "RAM": "Bộ nhớ|RAM",
-            "GPU": "Card đồ họa|VGA|Card màn hình",
-            "Storage": "Ổ cứng|Lưu trữ|SSD|HDD",
-            "PSU": "Nguồn|Nguồn máy tính",
-            "Case": "Vỏ máy tính|Case|Thùng máy",
-            "Cooling": "Tản nhiệt|Quạt tản nhiệt|Làm mát"
-        }
-        return translations.get(category, category)
